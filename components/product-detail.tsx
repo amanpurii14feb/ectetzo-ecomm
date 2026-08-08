@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 import type { Product } from "@/lib/types";
 import { useStore } from "@/stores/use-store";
 import { Heart, Minus, Plus, ShieldCheck, Star, Truck } from "lucide-react";
@@ -12,12 +13,31 @@ export function ProductDetail({ p }: { p: Product }) {
     [pin, setPin] = useState("");
   const router = useRouter();
   const add = useStore((s) => s.add),
-    toggle = useStore((s) => s.toggleWish);
+    setQuantity = useStore((s) => s.quantity),
+    toggle = useStore((s) => s.toggleWish),
+    cartQuantity = useStore((s) => s.cart[p.id] || 0),
+    hydrated = useStore((s) => s.hydrated);
+  useEffect(() => {
+    if (hydrated) setQ(cartQuantity || 1);
+  }, [cartQuantity, hydrated]);
+  const syncCart = () => {
+    if (cartQuantity) {
+      setQuantity(p.id, q);
+      useStore.getState().notify("Cart quantity updated");
+    } else {
+      add(p.id, q);
+    }
+  };
+  const categorySlug = p.category.toLowerCase().replaceAll(" ", "-");
   return (
     <div className="container section">
-      <div className="text-sm muted">
-        Home / {p.category} / {p.name}
-      </div>
+      <nav className="product-breadcrumb" aria-label="Breadcrumb">
+        <Link href="/">Home</Link>
+        <span aria-hidden="true">/</span>
+        <Link href={`/category/${categorySlug}`}>{p.category}</Link>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">{p.name}</span>
+      </nav>
       <div className="mt-8 grid gap-10 md:grid-cols-2">
         <div>
           <div
@@ -62,33 +82,64 @@ export function ProductDetail({ p }: { p: Product }) {
           </p>
           <div className="mt-5 flex gap-3">
             <div className="flex items-center rounded border">
-              <button className="p-3" onClick={() => setQ(Math.max(1, q - 1))}>
+              <button
+                className="p-3"
+                onClick={() => setQ(Math.max(1, q - 1))}
+                aria-label="Decrease quantity"
+              >
                 <Minus size={16} />
               </button>
-              <b className="w-9 text-center">{q}</b>
-              <button className="p-3" onClick={() => setQ(q + 1)}>
+              <b className="w-9 text-center" aria-live="polite">
+                {q}
+              </b>
+              <button
+                className="p-3"
+                onClick={() => setQ(Math.min(p.stock, q + 1))}
+                disabled={q >= p.stock}
+                aria-label="Increase quantity"
+              >
                 <Plus size={16} />
               </button>
             </div>
-            <button
-              onClick={() => add(p.id, q)}
-              className="btn btn-yellow flex-1"
-            >
-              Add to Cart
+            <button onClick={syncCart} className="btn btn-yellow flex-1">
+              {cartQuantity ? "Update Cart" : "Add to Cart"}
             </button>
             <button onClick={() => toggle(p.id)} className="btn btn-outline">
               <Heart />
             </button>
           </div>
           <button
-            onClick={() => { add(p.id, q); router.push("/checkout"); }}
+            onClick={() => {
+              syncCart();
+              router.push("/checkout");
+            }}
             className="btn btn-dark mt-3 w-full"
           >
             Buy Now
           </button>
           <div className="mt-6 flex gap-2">
-            <input value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))} className="field" placeholder="Enter PIN code" />
-            <button onClick={() => useStore.getState().notify(pin.length === 6 ? "Delivery available in 3–5 working days" : "Enter a valid 6-digit PIN code")} className="btn btn-outline">Check</button>
+            <input
+              value={pin}
+              onChange={(e) =>
+                setPin(e.target.value.replace(/\D/g, "").slice(0, 6))
+              }
+              className="field"
+              placeholder="Enter PIN code"
+            />
+            <button
+              onClick={() =>
+                useStore
+                  .getState()
+                  .notify(
+                    pin.length === 6
+                      ? "Delivery available in 3–5 working days"
+                      : "Enter a valid 6-digit PIN code",
+                  )
+              }
+              className="btn btn-outline"
+            >
+              Check
+            </button>
           </div>
           <div className="mt-6 grid grid-cols-2 gap-3 text-sm">
             <span className="flex gap-2">

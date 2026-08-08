@@ -70,12 +70,5 @@ export const products: Product[] = raw.map((p, i) => ({
 }));
 export const categories = [...new Set(products.map((p) => p.category))];
 export const brands = [
-  "Polycab",
-  "Havells",
-  "Finolex",
-  "Schneider Electric",
-  "Legrand",
-  "Anchor",
-  "L&T",
-  "Siemens",
-];
+  ...new Set(products.map((product) => product.brand)),
+].sort();

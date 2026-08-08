@@ -4,7 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import { products, categories, brands } from "@/data/products";
 import { ProductGrid } from "./product-grid";
 import type { Product } from "@/lib/types";
+import Link from "next/link";
+import { useStore } from "@/stores/use-store";
 import {
+  ArrowUpRight,
   Check,
   ChevronDown,
   Filter,
@@ -19,6 +22,7 @@ import {
   SlidersHorizontal,
   Sparkles,
   Star,
+  Scale,
   X,
 } from "lucide-react";
 
@@ -30,7 +34,13 @@ const sortOptions = [
   { value: "low", label: "Price: Low to high" },
   { value: "high", label: "Price: High to low" },
   { value: "rating", label: "Top rated" },
+  { value: "popular", label: "Most popular" },
+  { value: "discount", label: "Biggest discount" },
 ];
+const warranties = [
+  ...new Set(products.map((product) => product.specs.Warranty)),
+];
+const dealTypes = ["Best Seller", "New"];
 
 const discount = (product: Product) =>
   Math.round((1 - product.price / product.mrp) * 100);
@@ -60,6 +70,8 @@ export function Catalog({
   const [maxPrice, setMaxPrice] = useState(PRICE_CEILING);
   const [minRating, setMinRating] = useState(0);
   const [minDiscount, setMinDiscount] = useState(0);
+  const [selectedWarranties, setSelectedWarranties] = useState<string[]>([]);
+  const [selectedDeals, setSelectedDeals] = useState<string[]>([]);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [brandSearch, setBrandSearch] = useState("");
   const [sort, setSort] = useState("featured");
@@ -68,6 +80,8 @@ export function Catalog({
   const [page, setPage] = useState(1);
   const [sortOpen, setSortOpen] = useState(false);
   const [urlReady, setUrlReady] = useState(false);
+  const [compareIds, setCompareIds] = useState<number[]>([]);
+  const [compareOpen, setCompareOpen] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -81,8 +95,20 @@ export function Catalog({
         .get("brands")
         ?.split(",")
         .filter((item) => brands.includes(item)) ?? [];
+    const warrantyValues =
+      params
+        .get("warranty")
+        ?.split(",")
+        .filter((item) => warranties.includes(item)) ?? [];
+    const dealValues =
+      params
+        .get("deals")
+        ?.split(",")
+        .filter((item) => dealTypes.includes(item)) ?? [];
     if (cats.length) setSelectedCategories(cats);
     if (selected.length) setSelectedBrands(selected);
+    if (warrantyValues.length) setSelectedWarranties(warrantyValues);
+    if (dealValues.length) setSelectedDeals(dealValues);
     if (params.has("min"))
       setMinPrice(Math.max(0, Number(params.get("min")) || 0));
     if (params.has("max"))
@@ -109,6 +135,12 @@ export function Catalog({
       selectedCategories.length > 0,
     );
     setOrDelete("brands", selectedBrands.join(","), selectedBrands.length > 0);
+    setOrDelete(
+      "warranty",
+      selectedWarranties.join(","),
+      selectedWarranties.length > 0,
+    );
+    setOrDelete("deals", selectedDeals.join(","), selectedDeals.length > 0);
     setOrDelete("min", String(minPrice), minPrice > 0);
     setOrDelete("max", String(maxPrice), maxPrice < PRICE_CEILING);
     setOrDelete("rating", String(minRating), minRating > 0);
@@ -124,6 +156,8 @@ export function Catalog({
     urlReady,
     selectedCategories,
     selectedBrands,
+    selectedWarranties,
+    selectedDeals,
     minPrice,
     maxPrice,
     minRating,
@@ -139,6 +173,10 @@ export function Catalog({
     (ignore === "brand" ||
       !selectedBrands.length ||
       selectedBrands.includes(product.brand)) &&
+    (!selectedWarranties.length ||
+      selectedWarranties.includes(product.specs.Warranty)) &&
+    (!selectedDeals.length ||
+      Boolean(product.badge && selectedDeals.includes(product.badge))) &&
     product.price >= minPrice &&
     product.price <= maxPrice &&
     (!minRating || product.rating >= minRating) &&
@@ -164,6 +202,8 @@ export function Catalog({
       maxPrice,
       minRating,
       minDiscount,
+      selectedWarranties,
+      selectedDeals,
       inStockOnly,
       query,
     ],
@@ -183,6 +223,8 @@ export function Catalog({
       maxPrice,
       minRating,
       minDiscount,
+      selectedWarranties,
+      selectedDeals,
       inStockOnly,
       query,
     ],
@@ -194,6 +236,10 @@ export function Catalog({
     if (sort === "high") result = [...result].sort((a, b) => b.price - a.price);
     if (sort === "rating")
       result = [...result].sort((a, b) => b.rating - a.rating);
+    if (sort === "popular")
+      result = [...result].sort((a, b) => b.reviews - a.reviews);
+    if (sort === "discount")
+      result = [...result].sort((a, b) => discount(b) - discount(a));
     return result;
   }, [
     selectedCategories,
@@ -202,6 +248,8 @@ export function Catalog({
     maxPrice,
     minRating,
     minDiscount,
+    selectedWarranties,
+    selectedDeals,
     inStockOnly,
     sort,
     query,
@@ -220,6 +268,8 @@ export function Catalog({
     setMaxPrice(PRICE_CEILING);
     setMinRating(0);
     setMinDiscount(0);
+    setSelectedWarranties([]);
+    setSelectedDeals([]);
     setInStockOnly(false);
     setPage(1);
   };
@@ -230,6 +280,8 @@ export function Catalog({
     Number(maxPrice < PRICE_CEILING) +
     Number(minRating > 0) +
     Number(minDiscount > 0) +
+    selectedWarranties.length +
+    selectedDeals.length +
     Number(inStockOnly);
   const filteredBrands = brands.filter((item) =>
     item.toLowerCase().includes(brandSearch.toLowerCase()),
@@ -436,6 +488,40 @@ export function Catalog({
                 ),
             ),
           )}
+          {dealTypes.map((deal) =>
+            checkRow(
+              deal,
+              products.filter((product) => product.badge === deal).length,
+              selectedDeals.includes(deal),
+              false,
+              () =>
+                changeFilter(() =>
+                  setSelectedDeals(toggleValue(selectedDeals, deal)),
+                ),
+            ),
+          )}
+        </div>
+      </details>
+      <details className="facet-section" open>
+        <summary>
+          Warranty <ChevronDown size={15} />
+        </summary>
+        <div className="facet-options">
+          {warranties.map((warranty) =>
+            checkRow(
+              warranty,
+              products.filter((product) => product.specs.Warranty === warranty)
+                .length,
+              selectedWarranties.includes(warranty),
+              false,
+              () =>
+                changeFilter(() =>
+                  setSelectedWarranties(
+                    toggleValue(selectedWarranties, warranty),
+                  ),
+                ),
+            ),
+          )}
         </div>
       </details>
       <button onClick={clearFilters} className="catalog-reset">
@@ -493,7 +579,45 @@ export function Catalog({
           },
         ]
       : []),
+    ...selectedWarranties.map((value) => ({
+      label: `Warranty: ${value}`,
+      remove: () =>
+        setSelectedWarranties(
+          selectedWarranties.filter((item) => item !== value),
+        ),
+    })),
+    ...selectedDeals.map((value) => ({
+      label: `Deal: ${value}`,
+      remove: () =>
+        setSelectedDeals(selectedDeals.filter((item) => item !== value)),
+    })),
   ];
+
+  const toggleCompare = (id: number) => {
+    if (compareIds.includes(id)) {
+      const remaining = compareIds.filter((item) => item !== id);
+      setCompareIds(remaining);
+      if (compareOpen && remaining.length < 2) setCompareOpen(false);
+      return;
+    }
+    if (compareIds.length >= 3) {
+      useStore.getState().notify("You can compare up to 3 products");
+      return;
+    }
+    setCompareIds([...compareIds, id]);
+  };
+  const compareProducts = products.filter((product) =>
+    compareIds.includes(product.id),
+  );
+  const lowestComparePrice = Math.min(
+    ...compareProducts.map((product) => product.price),
+  );
+  const highestCompareRating = Math.max(
+    ...compareProducts.map((product) => product.rating),
+  );
+  const highestCompareDiscount = Math.max(
+    ...compareProducts.map((product) => discount(product)),
+  );
 
   const heading = query
     ? `Results for “${query}”`
@@ -639,7 +763,12 @@ export function Catalog({
               </div>
             )}
             {visible.length ? (
-              <ProductGrid items={visible} view={view} />
+              <ProductGrid
+                items={visible}
+                view={view}
+                compareIds={compareIds}
+                onCompare={toggleCompare}
+              />
             ) : (
               <div className="card empty-state">
                 <SearchX size={42} />
@@ -671,6 +800,142 @@ export function Catalog({
           </div>
         </div>
       </div>
+      {compareIds.length > 0 && (
+        <div className="compare-tray">
+          <div>
+            <Scale size={18} />
+            <span>
+              <b>Compare products</b>
+              <small>{compareIds.length} of 3 selected</small>
+            </span>
+          </div>
+          <div className="compare-tray-items">
+            {compareProducts.map((product) => (
+              <button
+                key={product.id}
+                onClick={() => toggleCompare(product.id)}
+                title="Remove from comparison"
+              >
+                <span
+                  className="product-visual"
+                  style={{ background: product.color }}
+                />
+                <b>{product.name}</b>
+                <X size={13} />
+              </button>
+            ))}
+          </div>
+          <button
+            className="compare-action"
+            disabled={compareIds.length < 2}
+            onClick={() => setCompareOpen(true)}
+          >
+            Compare now
+          </button>
+        </div>
+      )}
+      {compareOpen && (
+        <div
+          className="compare-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Product comparison"
+        >
+          <button
+            className="compare-backdrop"
+            onClick={() => setCompareOpen(false)}
+            aria-label="Close comparison"
+          />
+          <div className="compare-dialog">
+            <div className="compare-head">
+              <div>
+                <span className="eyebrow">Side-by-side</span>
+                <h2>Compare products</h2>
+                <p>Quickly spot the differences that matter.</p>
+              </div>
+              <button onClick={() => setCompareOpen(false)} aria-label="Close">
+                <X />
+              </button>
+            </div>
+            <div className="compare-table">
+              <div className="compare-labels">
+                <b>
+                  Product <small>{compareProducts.length} selected</small>
+                </b>
+                <span>Price</span>
+                <span>Rating</span>
+                <span>Warranty</span>
+                <span>Availability</span>
+                <span>Discount</span>
+              </div>
+              {compareProducts.map((product) => (
+                <div className="compare-column" key={product.id}>
+                  <div className="compare-product">
+                    <button
+                      type="button"
+                      onClick={() => toggleCompare(product.id)}
+                      aria-label={`Remove ${product.name} from comparison`}
+                      title="Remove from comparison"
+                    >
+                      <X size={13} />
+                    </button>
+                    <Link href={`/product/${product.slug}`}>
+                      <span
+                        className="product-visual"
+                        style={{ background: product.color }}
+                      />
+                      <small>{product.brand}</small>
+                      <b>{product.name}</b>
+                    </Link>
+                  </div>
+                  <strong
+                    className={
+                      product.price === lowestComparePrice ? "best-cell" : ""
+                    }
+                  >
+                    ₹{product.price.toLocaleString("en-IN")}
+                    <s>₹{product.mrp.toLocaleString("en-IN")}</s>
+                    {product.price === lowestComparePrice && (
+                      <em>Best price</em>
+                    )}
+                  </strong>
+                  <span
+                    className={
+                      product.rating === highestCompareRating ? "best-cell" : ""
+                    }
+                  >
+                    <Star size={14} fill="#f6b800" color="#f6b800" />
+                    <b>{product.rating}</b>
+                    <small>{product.reviews} reviews</small>
+                  </span>
+                  <span>{product.specs.Warranty}</span>
+                  <span className="compare-stock">
+                    <i /> In stock
+                  </span>
+                  <span
+                    className={
+                      discount(product) === highestCompareDiscount
+                        ? "best-cell"
+                        : ""
+                    }
+                  >
+                    <b>{discount(product)}% off</b>
+                    {discount(product) === highestCompareDiscount && (
+                      <em>Best saving</em>
+                    )}
+                  </span>
+                  <Link
+                    href={`/product/${product.slug}`}
+                    className="btn btn-dark"
+                  >
+                    View product <ArrowUpRight size={14} />
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

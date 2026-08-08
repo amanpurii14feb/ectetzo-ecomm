@@ -8,9 +8,9 @@ export default function Page() {
           <span className="rounded bg-paper px-2 py-1 text-xs font-bold">
             HOME
           </span>
-          <b className="mt-4 block">Aman Sharma</b>
+          <b className="mt-4 block">Aman Puri</b>
           <p className="mt-2 max-w-md text-sm leading-6 muted">
-            12, Residency Road, Ashok Nagar, Bengaluru, Karnataka 560025
+            12, Rajiv Chawk, New Delhi, 110044
             <br />
             Mobile: 9876543210
           </p>
