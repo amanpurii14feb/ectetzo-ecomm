@@ -1,9 +1,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { Header } from "@/components/header";
-import { Footer } from "@/components/footer";
-import { StoreUI } from "@/components/store-ui";
 import { AuthProvider } from "@/components/auth-provider";
+import { SiteChrome } from "@/components/site-chrome";
 export const metadata: Metadata = {
   title: "Electzo — Powering Every Connection",
   description:
@@ -14,10 +12,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <html lang="en">
       <body>
         <AuthProvider>
-          <Header />
-          <main>{children}</main>
-          <Footer />
-          <StoreUI />
+          <SiteChrome>{children}</SiteChrome>
         </AuthProvider>
       </body>
     </html>

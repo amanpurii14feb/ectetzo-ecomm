@@ -1,0 +1,5 @@
+import Link from "next/link";
+export function PageHeader({title,description,actions}:{title:string;description?:string;actions?:React.ReactNode}){return <header className="adm-page-head"><div><h1>{title}</h1>{description&&<p>{description}</p>}</div>{actions&&<div className="adm-page-actions">{actions}</div>}</header>}
+export function StatusBadge({children,tone="neutral"}:{children:React.ReactNode;tone?:"success"|"warning"|"danger"|"info"|"neutral"}){return <span className={`adm-badge ${tone}`}>{children}</span>}
+export function EmptyState({title,description,action}:{title:string;description:string;action?:{label:string;href:string}}){return <div className="adm-empty-state"><div>◇</div><h3>{title}</h3><p>{description}</p>{action&&<Link className="adm-btn primary" href={action.href}>{action.label}</Link>}</div>}
+export function MockNotice(){return <div className="adm-mock-notice">Configuration preview — this module is UI-ready and requires its backend model/API to persist changes.</div>}

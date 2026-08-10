@@ -16,7 +16,7 @@ const schema = z.object({
 });
 type FormValues = z.infer<typeof schema>;
 
-export function AuthForm({ registering = false }: { registering?: boolean }) {
+export function AuthForm({ registering = false, callbackUrl = "/account" }: { registering?: boolean; callbackUrl?: string }) {
   const router = useRouter();
   const [serverError, setServerError] = useState("");
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>({ resolver: zodResolver(schema) });
@@ -50,7 +50,7 @@ export function AuthForm({ registering = false }: { registering?: boolean }) {
     }
     // Cart and wishlist belong to this browser and must survive sign-in/sign-up.
     useStore.setState({ cart: guestCart, wishlist: guestWishlist, hydrated: true });
-    router.push("/account");
+    router.push(callbackUrl.startsWith("/") ? callbackUrl : "/account");
     router.refresh();
   }
 
@@ -65,7 +65,7 @@ export function AuthForm({ registering = false }: { registering?: boolean }) {
         <label className="mt-4 block"><span className="label">Password</span><input type="password" className="field" {...register("password")} /><small className="text-red-600">{errors.password?.message}</small></label>
         {serverError && <p className="mt-3 text-sm text-red-600">{serverError}</p>}
         <button disabled={isSubmitting} className="btn btn-yellow mt-5 w-full">{isSubmitting ? "Please wait..." : registering ? "Create account" : "Sign in"}</button>
-        <button type="button" onClick={() => signIn("google", { callbackUrl: "/account" })} className="btn btn-outline mt-3 w-full">Continue with Google</button>
+        <button type="button" onClick={() => signIn("google", { callbackUrl: callbackUrl.startsWith("/") ? callbackUrl : "/account" })} className="btn btn-outline mt-3 w-full">Continue with Google</button>
         <p className="mt-5 text-center text-sm muted">{registering ? "Already registered? " : "New to Electzo? "}<Link className="font-bold text-ink" href={registering ? "/login" : "/register"}>{registering ? "Sign in" : "Create account"}</Link></p>
       </form>
     </div>

@@ -1,0 +1,3 @@
+import { NextResponse } from "next/server";import { z } from "zod";import { getAdmin } from "@/lib/admin";import { prisma } from "@/lib/prisma";
+const schema=z.object({status:z.enum(["PENDING","CONFIRMED","PROCESSING","SHIPPED","DELIVERED","CANCELLED"]),paymentStatus:z.enum(["UNPAID","PAID","FAILED"]).optional()});
+export async function PATCH(req:Request,{params}:{params:Promise<{id:string}>}){if(!await getAdmin())return NextResponse.json({error:"Forbidden"},{status:403});const x=schema.safeParse(await req.json());if(!x.success)return NextResponse.json({error:"Invalid status"},{status:400});const {id}=await params;return NextResponse.json({order:await prisma.order.update({where:{id},data:x.data})})}

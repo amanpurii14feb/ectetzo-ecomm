@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { products, categories, brands } from "@/data/products";
+import { products as fallbackProducts } from "@/data/products";
 import { ProductGrid } from "./product-grid";
 import type { Product } from "@/lib/types";
 import Link from "next/link";
@@ -27,8 +27,6 @@ import {
 } from "lucide-react";
 
 const PAGE_SIZE = 9;
-const PRICE_CEILING =
-  Math.ceil(Math.max(...products.map((p) => p.price)) / 1000) * 1000;
 const sortOptions = [
   { value: "featured", label: "Featured" },
   { value: "low", label: "Price: Low to high" },
@@ -36,9 +34,6 @@ const sortOptions = [
   { value: "rating", label: "Top rated" },
   { value: "popular", label: "Most popular" },
   { value: "discount", label: "Biggest discount" },
-];
-const warranties = [
-  ...new Set(products.map((product) => product.specs.Warranty)),
 ];
 const dealTypes = ["Best Seller", "New"];
 
@@ -52,10 +47,17 @@ const toggleValue = (values: string[], value: string) =>
 export function Catalog({
   initialCategory,
   query,
+  items = fallbackProducts,
 }: {
   initialCategory?: string;
   query?: string;
+  items?: Product[];
 }) {
+  const products = items;
+  const categories = [...new Set(products.map((product) => product.category))];
+  const brands = [...new Set(products.map((product) => product.brand))].sort();
+  const warranties = [...new Set(products.map((product) => product.specs.Warranty).filter(Boolean))];
+  const PRICE_CEILING = Math.max(1000, Math.ceil(Math.max(0, ...products.map((p) => p.price)) / 1000) * 1000);
   const initialCat =
     categories.find(
       (item) =>

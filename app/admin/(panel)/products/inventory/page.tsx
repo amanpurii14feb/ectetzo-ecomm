@@ -1,0 +1,1 @@
+import {prisma}from"@/lib/prisma";import{InventoryTable}from"@/admin/components/inventory-table";export const dynamic="force-dynamic";export default async function Page(){const products=await prisma.product.findMany({select:{id:true,name:true,legacyId:true,stock:true,color:true},orderBy:{name:"asc"}});return <InventoryTable products={products}/>}
