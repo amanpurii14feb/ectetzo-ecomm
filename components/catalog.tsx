@@ -290,13 +290,14 @@ export function Catalog({
   );
 
   const checkRow = (
+    key: string,
     label: string,
     count: number,
     checked: boolean,
     disabled: boolean,
     onChange: () => void,
   ) => (
-    <label className={`facet-option ${disabled && !checked ? "disabled" : ""}`}>
+    <label key={key} className={`facet-option ${disabled && !checked ? "disabled" : ""}`}>
       <input
         type="checkbox"
         checked={checked}
@@ -329,6 +330,7 @@ export function Catalog({
         <div className="facet-options">
           {categories.map((item) =>
             checkRow(
+              `category-${item}`,
               item,
               categoryCounts[item],
               selectedCategories.includes(item),
@@ -356,6 +358,7 @@ export function Catalog({
         <div className="facet-options facet-scroll">
           {filteredBrands.map((item) =>
             checkRow(
+              `brand-${item}`,
               item,
               brandCounts[item],
               selectedBrands.includes(item),
@@ -472,6 +475,7 @@ export function Catalog({
         </summary>
         <div className="facet-options">
           {checkRow(
+            "availability-in-stock",
             "In stock",
             products.filter((p) => p.stock > 0).length,
             inStockOnly,
@@ -480,6 +484,7 @@ export function Catalog({
           )}
           {[10, 20].map((off) =>
             checkRow(
+              `discount-${off}`,
               `${off}% off or more`,
               products.filter((p) => discount(p) >= off).length,
               minDiscount === off,
@@ -492,6 +497,7 @@ export function Catalog({
           )}
           {dealTypes.map((deal) =>
             checkRow(
+              `deal-${deal}`,
               deal,
               products.filter((product) => product.badge === deal).length,
               selectedDeals.includes(deal),
@@ -511,6 +517,7 @@ export function Catalog({
         <div className="facet-options">
           {warranties.map((warranty) =>
             checkRow(
+              `warranty-${warranty}`,
               warranty,
               products.filter((product) => product.specs.Warranty === warranty)
                 .length,
