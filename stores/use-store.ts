@@ -5,10 +5,13 @@ type State = {
   cart: Record<number, number>;
   wishlist: number[];
   hydrated: boolean;
+  accountId: string | null;
+  commerceReady: boolean;
   add: (id: number, q?: number) => void;
   remove: (id: number) => void;
   quantity: (id: number, q: number) => void;
   clearCart: () => void;
+  resetCommerce: () => void;
   toggleWish: (id: number) => void;
   moveToWishlist: (id: number) => void;
   notice: string;
@@ -22,6 +25,8 @@ export const useStore = create<State>()(
       cart: {},
       wishlist: [],
       hydrated: false,
+      accountId: null,
+      commerceReady: false,
       notice: "",
       add: (id, q = 1) =>
         set((s) => ({
@@ -37,6 +42,7 @@ export const useStore = create<State>()(
       quantity: (id, q) =>
         set((s) => ({ cart: { ...s.cart, [id]: Math.max(1, q) } })),
       clearCart: () => set({ cart: {}, notice: "Order placed successfully" }),
+      resetCommerce: () => set({ cart: {}, wishlist: [], notice: "" }),
       toggleWish: (id) =>
         set((s) => ({
           wishlist: s.wishlist.includes(id)
@@ -65,8 +71,16 @@ export const useStore = create<State>()(
     {
       name: "electzo-store",
       skipHydration: true,
-      partialize: (s) => ({ cart: s.cart, wishlist: s.wishlist }),
+      // Authenticated account data lives only in PostgreSQL, never localStorage.
+      partialize: (s) => s.accountId ? { cart: {}, wishlist: [] } : { cart: s.cart, wishlist: s.wishlist },
       onRehydrateStorage: () => (state) => state?.setHydrated(true),
     },
   ),
 );
+
+/** Clears both in-memory state and the browser-persisted basket. */
+export function clearCommerceData() {
+  useStore.getState().resetCommerce();
+  useStore.setState({ accountId: null, commerceReady: false, hydrated: true });
+  useStore.persist.clearStorage();
+}

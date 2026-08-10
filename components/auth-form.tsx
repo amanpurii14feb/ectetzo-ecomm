@@ -7,7 +7,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useStore } from "@/stores/use-store";
 
 const schema = z.object({
   email: z.string().email(),
@@ -23,10 +22,6 @@ export function AuthForm({ registering = false, callbackUrl = "/account" }: { re
 
   async function submit(values: FormValues) {
     setServerError("");
-    // Finish loading the guest basket before authentication changes the route.
-    await useStore.persist.rehydrate();
-    const guestCart = { ...useStore.getState().cart };
-    const guestWishlist = [...useStore.getState().wishlist];
     if (registering) {
       if (!values.name || values.name.trim().length < 2) {
         setServerError("Please enter your full name.");
@@ -48,8 +43,6 @@ export function AuthForm({ registering = false, callbackUrl = "/account" }: { re
       setServerError("Email or password is incorrect.");
       return;
     }
-    // Cart and wishlist belong to this browser and must survive sign-in/sign-up.
-    useStore.setState({ cart: guestCart, wishlist: guestWishlist, hydrated: true });
     router.push(callbackUrl.startsWith("/") ? callbackUrl : "/account");
     router.refresh();
   }

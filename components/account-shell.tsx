@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
+import { clearCommerceData } from "@/stores/use-store";
 const links = [
   ["Overview", "/account", LayoutDashboard],
   ["Orders", "/account/orders", Package],
@@ -48,7 +49,10 @@ export function AccountShell({ children }: { children: React.ReactNode }) {
               </Link>
             ))}
             <button
-              onClick={() => signOut({ callbackUrl: "/login" })}
+              onClick={async () => {
+                clearCommerceData();
+                await signOut({ callbackUrl: "/login" });
+              }}
               className="account-side-link account-logout"
             >
               <LogOut size={18} strokeWidth={1.9} />

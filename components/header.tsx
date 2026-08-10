@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { ChevronDown, Heart, LogOut, MapPin, Menu, Package, Search, ShoppingCart, User, X } from "lucide-react";
 import { Logo } from "./logo";
-import { useStore } from "@/stores/use-store";
+import { clearCommerceData, useStore } from "@/stores/use-store";
 import { useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { products } from "@/data/products";
@@ -34,6 +34,10 @@ export function Header() {
     if (q.trim()) { r.push("/search?q=" + encodeURIComponent(q.trim())); setOpen(false); }
   };
   const suggestions = useMemo(() => q.trim().length < 2 ? [] : products.filter((p) => `${p.name} ${p.brand} ${p.category}`.toLowerCase().includes(q.toLowerCase())).slice(0, 5), [q]);
+  const logout = async () => {
+    clearCommerceData();
+    await signOut({ callbackUrl: "/login" });
+  };
   return (
     <>
       <div className="bg-volt py-2 text-center text-xs font-bold">
@@ -72,7 +76,7 @@ export function Header() {
                 <Link href="/account/addresses"><MapPin size={17}/> Saved addresses</Link>
                 <Link href="/wishlist"><Heart size={17}/> My wishlist</Link>
                 <Link className="account-manage" href="/account">Manage account →</Link>
-                <button className="account-signout" type="button" onClick={() => signOut({ callbackUrl: "/login" })}><LogOut size={17}/> Sign out</button>
+                <button className="account-signout" type="button" onClick={logout}><LogOut size={17}/> Sign out</button>
               </div>}
             </div>
             <Link href="/wishlist" className="header-icon-button" aria-label="Wishlist">
@@ -116,7 +120,7 @@ export function Header() {
             ))}
             {user ? <>
               <Link onClick={() => setOpen(false)} className="mt-2 flex items-center gap-2 border-t border-white/10 py-3 font-bold" href="/account"><User size={18}/> My account</Link>
-              <button onClick={() => signOut({ callbackUrl: "/login" })} className="flex items-center gap-2 py-3 font-bold"><LogOut size={18}/> Sign out</button>
+              <button onClick={logout} className="flex items-center gap-2 py-3 font-bold"><LogOut size={18}/> Sign out</button>
             </> : <Link onClick={() => setOpen(false)} className="mt-2 flex items-center gap-2 border-t border-white/10 py-3 font-bold" href="/login"><User size={18}/> Sign in</Link>}
           </div>
         )}
