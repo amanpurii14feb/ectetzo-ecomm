@@ -81,15 +81,19 @@ export function Header() {
             </div>
             <Link href="/wishlist" className="header-icon-button" aria-label="Wishlist">
               <Heart />
-              <b className="absolute -right-2 -top-2 rounded-full bg-volt px-1 text-[10px] text-ink">
-                {wish.length}
-              </b>
+               {wish.length > 0 && (
+                <b className="absolute -right-2 -top-2 rounded-full bg-volt px-1 text-[10px] text-ink">
+                  {wish.length}
+                </b>
+              )}
             </Link>
             <Link href="/cart" className="header-icon-button" aria-label="Cart">
               <ShoppingCart />
-              <b className="absolute -right-2 -top-2 rounded-full bg-volt px-1 text-[10px] text-ink">
-                {Object.values(cart).reduce((a, b) => a + b, 0)}
-              </b>
+              {Object.values(cart).reduce((a, b) => a + b, 0) > 0 && (
+                <b className="absolute -right-2 -top-2 rounded-full bg-volt px-1 text-[10px] text-ink">
+                  {Object.values(cart).reduce((a, b) => a + b, 0)}
+                </b>
+              )}
             </Link>
             <button onClick={() => setOpen(!open)} className="mobile-only">
               {open ? <X /> : <Menu />}

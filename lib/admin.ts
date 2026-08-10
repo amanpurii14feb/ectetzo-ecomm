@@ -13,11 +13,11 @@ export async function getAdmin() {
 
 export async function requireAdmin() {
   const session = await auth();
-  if (!session?.user?.id) redirect("/login?callbackUrl=/admin");
+  if (!session?.user?.id) redirect("/admin/login");
   const admin = await prisma.user.findFirst({
     where: { id: session.user.id, role: "ADMIN" },
     select: { id: true, name: true, email: true, role: true },
   });
-  if (!admin) redirect("/account?error=admin-access-required");
+  if (!admin) redirect("/admin/login?error=admin-access-required");
   return admin;
 }
