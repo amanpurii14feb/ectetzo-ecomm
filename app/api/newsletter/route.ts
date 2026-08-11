@@ -1,0 +1,3 @@
+import { NextResponse } from "next/server";import { z } from "zod";import { prisma } from "@/lib/prisma";
+const schema=z.object({email:z.string().trim().toLowerCase().email()});
+export async function POST(request:Request){const p=schema.safeParse(await request.json().catch(()=>null));if(!p.success)return NextResponse.json({error:"Please enter a valid email address."},{status:400});const existing=await prisma.adminRecord.findFirst({where:{module:"newsletter",name:p.data.email}});if(!existing)await prisma.adminRecord.create({data:{module:"newsletter",name:p.data.email,status:"Subscribed",data:{}}});return NextResponse.json({ok:true},{status:existing?200:201})}

@@ -4,13 +4,14 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { Activity, BadgePercent, BarChart3, Bell, ChevronDown, ChevronRight, CircleHelp, Command, CreditCard, FileText, Home, LogOut, Menu, Megaphone, Package, PanelLeftClose, PanelLeftOpen, Plus, Search, Settings, ShoppingBag, Store, Tags, UserRound, Users, X, Zap } from "lucide-react";
+import { Activity, BadgePercent, BarChart3, Bell, ChevronDown, ChevronRight, CircleHelp, Command, CreditCard, FileText, Home, LogOut, Mail, Menu, Megaphone, Package, PanelLeftClose, PanelLeftOpen, Plus, Search, Settings, ShoppingBag, Store, Tags, UserRound, Users, X, Zap } from "lucide-react";
 
 const navigation = [
   { label:"Home", href:"/admin/dashboard", icon:Home },
   { label:"Orders", href:"/admin/orders", icon:ShoppingBag },
   { label:"Products", href:"/admin/products", icon:Package, children:[["All products","/admin/products"],["Inventory","/admin/products/inventory"],["Categories","/admin/products/categories"],["Collections","/admin/products/collections"],["Brands","/admin/products/brands"]] },
   { label:"Customers", href:"/admin/customers", icon:Users },
+  { label:"Messages", href:"/admin/contact-messages", icon:Mail, children:[["Contact messages","/admin/contact-messages"],["Newsletter","/admin/newsletter"]] },
   { label:"Marketing", href:"/admin/marketing", icon:Megaphone },
   { label:"Discounts", href:"/admin/discounts", icon:BadgePercent },
   { label:"Content", href:"/admin/content/pages", icon:FileText, children:[["Pages","/admin/content/pages"],["Blogs","/admin/content/blogs"],["Navigation","/admin/content/navigation"],["Media","/admin/content/media"]] },

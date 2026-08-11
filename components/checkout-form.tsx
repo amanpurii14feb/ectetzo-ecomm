@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,8 +25,15 @@ export function CheckoutForm() {
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<Form>({ resolver: zodResolver(schema) });
+  useEffect(()=>{
+    Promise.all([fetch("/api/profile").then(r=>r.ok?r.json():null),fetch("/api/addresses").then(r=>r.ok?r.json():null)]).then(([p,a])=>{
+      const address=a?.addresses?.[0];
+      reset({email:p?.user?.email??"",phone:address?.phone??p?.user?.phone??"",name:address?.name??p?.user?.name??"",address:address?.line1??"",city:address?.city??"",state:address?.state??"",pin:address?.pin??""});
+    });
+  },[reset]);
   const items = products.filter((p) => cart[p.id]),
     total = items.reduce((a, p) => a + p.price * cart[p.id], 0);
   async function placeOrder(values: Form) {
@@ -55,7 +62,7 @@ export function CheckoutForm() {
     r.push(`/order-success?order=${body.order.orderNumber}`);
   }
   return (
-    <form onSubmit={handleSubmit(placeOrder)} className="container section">
+    <form onSubmit={handleSubmit(placeOrder)} className="container section checkout-form">
       <h1 className="section-title">Secure checkout</h1>
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_380px]">
         <div className="space-y-6">
@@ -70,6 +77,7 @@ export function CheckoutForm() {
               <label>
                 <span className="label">Mobile</span>
                 <input className="field" {...register("phone")} />
+                <small className="text-red-600">{errors.phone?.message}</small>
               </label>
             </div>
           </section>
@@ -79,22 +87,27 @@ export function CheckoutForm() {
               <label>
                 <span className="label">Full name</span>
                 <input className="field" {...register("name")} />
+                <small className="text-red-600">{errors.name?.message}</small>
               </label>
               <label className="md:col-span-2">
                 <span className="label">Address</span>
                 <input className="field" {...register("address")} />
+                <small className="text-red-600">{errors.address?.message}</small>
               </label>
               <label>
                 <span className="label">City</span>
                 <input className="field" {...register("city")} />
+                <small className="text-red-600">{errors.city?.message}</small>
               </label>
               <label>
                 <span className="label">State</span>
                 <input className="field" {...register("state")} />
+                <small className="text-red-600">{errors.state?.message}</small>
               </label>
               <label>
                 <span className="label">PIN code</span>
-                <input className="field" {...register("pin")} />
+                <input inputMode="numeric" className="field" {...register("pin")} />
+                <small className="text-red-600">{errors.pin?.message}</small>
               </label>
             </div>
           </section>

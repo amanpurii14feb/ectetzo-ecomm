@@ -5,6 +5,7 @@ import { products as fallbackProducts } from "@/data/products";
 import { ProductGrid } from "./product-grid";
 import type { Product } from "@/lib/types";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Checkbox } from "@/components/ui/radix";
 import { useStore } from "@/stores/use-store";
 import {
@@ -56,6 +57,7 @@ export function Catalog({
   query?: string;
   items?: Product[];
 }) {
+  const router = useRouter();
   const products = items;
   const categories = [...new Set(products.map((product) => product.category))];
   const brands = [...new Set(products.map((product) => product.brand))].sort();
@@ -274,7 +276,7 @@ export function Catalog({
     setPage(1);
   };
   const clearFilters = () => {
-    setSelectedCategories(initialCat ? [initialCat] : []);
+    setSelectedCategories([]);
     setSelectedBrands([]);
     setMinPrice(0);
     setMaxPrice(PRICE_CEILING);
@@ -284,6 +286,7 @@ export function Catalog({
     setSelectedDeals([]);
     setInStockOnly(false);
     setPage(1);
+    if (initialCategory) router.replace("/shop");
   };
   const filterCount =
     selectedCategories.length +

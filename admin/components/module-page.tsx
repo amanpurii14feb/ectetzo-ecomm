@@ -86,6 +86,7 @@ export function ModulePage({
                 <tr>
                   <th>Name</th>
                   <th>Status</th>
+                  <th>Details</th>
                   <th>Updated</th>
                   <th />
                 </tr>
@@ -96,6 +97,7 @@ export function ModulePage({
                     <td>
                       <b>{item.name}</b>
                     </td>
+                    <td><small>{Object.values(item.data).filter(v=>typeof v==="string"||typeof v==="number").join(" · ")||"—"}</small></td>
                     <td>
                       <StatusBadge
                         tone={

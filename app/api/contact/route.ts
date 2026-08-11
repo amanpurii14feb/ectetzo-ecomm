@@ -1,0 +1,3 @@
+import { NextResponse } from "next/server";import { z } from "zod";import { prisma } from "@/lib/prisma";
+const schema=z.object({name:z.string().trim().min(2).max(80),contact:z.string().trim().min(5).max(120),message:z.string().trim().min(10).max(2000)});
+export async function POST(request:Request){const p=schema.safeParse(await request.json().catch(()=>null));if(!p.success)return NextResponse.json({error:"Please complete all fields."},{status:400});await prisma.adminRecord.create({data:{module:"contact-messages",name:p.data.name,status:"New",data:{contact:p.data.contact,message:p.data.message}}});return NextResponse.json({ok:true},{status:201})}

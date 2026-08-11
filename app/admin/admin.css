@@ -1827,6 +1827,12 @@ body:has(.adm-login) {
   .adm-login-card h2 {
     font-size: 26px;
   }
+  .adm-dialog-shade { align-items: end; overflow-y: auto; padding-top: 40px; }
+  .adm-dialog { width: 100%; max-height: calc(100dvh - 40px); overflow-y: auto; border-radius: 14px 14px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); }
+  .adm-dialog footer { position: sticky; bottom: 0; flex-wrap: wrap; background: #fff; padding-top: 12px; }
+  .adm-toast { left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); min-width: 0; }
+  .adm-page-actions .adm-btn { flex: 0 0 auto; min-height: 40px; }
+  .adm-pagination { align-items: flex-start; flex-direction: column; gap: 9px; }
 }
 
 /* Dedicated restricted admin sign-in */

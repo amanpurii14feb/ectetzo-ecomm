@@ -1,0 +1,3 @@
+"use client";
+import { useState } from "react";import { useRouter } from "next/navigation";
+export function CancelOrderButton({id}:{id:string}){const[busy,setBusy]=useState(false),[error,setError]=useState("");const router=useRouter();async function cancel(){if(!confirm("Cancel this order? Stock will be returned to inventory."))return;setBusy(true);const r=await fetch(`/api/orders/${id}`,{method:"PATCH"});const b=await r.json().catch(()=>({}));if(!r.ok)setError(b.error??"Could not cancel order.");else router.refresh();setBusy(false)}return <div><button disabled={busy} onClick={cancel} className="btn btn-outline mt-5 text-red-600">{busy?"Cancelling...":"Cancel order"}</button>{error&&<p className="mt-2 text-sm text-red-600">{error}</p>}</div>}

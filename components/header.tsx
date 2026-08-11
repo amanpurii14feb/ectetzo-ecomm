@@ -14,7 +14,8 @@ import {
 } from "lucide-react";
 import { Logo } from "./logo";
 import { clearCommerceData, useStore } from "@/stores/use-store";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import type { Product } from "@/lib/types";
 import { usePathname, useRouter } from "next/navigation";
 import { useProducts } from "@/lib/use-products";
 import { signOut, useSession } from "next-auth/react";
@@ -38,7 +39,9 @@ export function Header() {
     ];
   }, [products]);
   const [open, setOpen] = useState(false),
-    [q, setQ] = useState("");
+    [q, setQ] = useState(""),
+    [suggestions, setSuggestions] = useState<Product[]>([]),
+    [searching, setSearching] = useState(false);
   const r = useRouter();
   const pathname = usePathname();
   const { data: session, status } = useSession();
@@ -55,19 +58,36 @@ export function Header() {
       setOpen(false);
     }
   };
-  const suggestions = useMemo(
-    () =>
-      q.trim().length < 2
-        ? []
-        : products
-            .filter((p) =>
-              `${p.name} ${p.brand} ${p.category}`
-                .toLowerCase()
-                .includes(q.toLowerCase()),
-            )
-            .slice(0, 5),
-    [products, q],
-  );
+  useEffect(() => {
+    const query = q.trim();
+    if (query.length < 2) {
+      setSuggestions([]);
+      setSearching(false);
+      return;
+    }
+    setSearching(true);
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `/api/products?q=${encodeURIComponent(query)}`,
+          { signal: controller.signal },
+        );
+        const body = await response.json();
+        if (response.ok)
+          setSuggestions((body.products as Product[]).slice(0, 5));
+      } catch (error) {
+        if ((error as { name?: string }).name !== "AbortError")
+          setSuggestions([]);
+      } finally {
+        if (!controller.signal.aborted) setSearching(false);
+      }
+    }, 250);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [q]);
   const logout = async () => {
     clearCommerceData();
     await signOut({ callbackUrl: "/login" });
@@ -104,9 +124,21 @@ export function Header() {
                 <X size={16} />
               </button>
             )}
-            <button className="search-submit text-ink">Search</button>
-            {suggestions.length > 0 && (
+            <button className="search-submit text-ink" aria-label="Search">
+              <Search size={17} strokeWidth={2.5} />
+            </button>
+            {q.trim().length >= 2 && (
               <div className="search-suggestions">
+                {searching && (
+                  <div className="search-suggestion-state">
+                    Searching products...
+                  </div>
+                )}
+                {!searching && suggestions.length === 0 && (
+                  <div className="search-suggestion-state">
+                    No products found
+                  </div>
+                )}
                 {suggestions.map((p) => (
                   <Link
                     key={p.id}

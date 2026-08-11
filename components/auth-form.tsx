@@ -49,7 +49,7 @@ export function AuthForm({ registering = false, callbackUrl = "/account" }: { re
 
   return (
     <div className="container section">
-      <form onSubmit={handleSubmit(submit)} className="card mx-auto max-w-md p-7">
+      <form onSubmit={handleSubmit(submit)} className="card auth-card mx-auto max-w-md p-7">
         <div className="eyebrow">Welcome to Electzo</div>
         <h1 className="mt-2 text-3xl font-black">{registering ? "Create account" : "Sign in"}</h1>
         <p className="mt-2 text-sm muted">{registering ? "Manage orders, addresses and saved items." : "Access orders and faster checkout."}</p>

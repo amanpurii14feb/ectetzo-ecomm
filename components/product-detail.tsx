@@ -1,10 +1,13 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Product } from "@/lib/types";
 import { useStore } from "@/stores/use-store";
 import {
+  ChevronLeft,
+  ChevronRight,
   Heart,
+  Maximize2,
   Minus,
   Plus,
   ShieldCheck,
@@ -38,13 +41,18 @@ export function ProductDetail({
   useEffect(() => {
     if (hydrated) setQ(cartQuantity || 1);
   }, [cartQuantity, hydrated]);
+  const galleryImages=useMemo(()=>p.images??[],[p.images]);
+  const selectOffset=useCallback((offset:number)=>{if(!galleryImages.length)return;const current=Math.max(0,galleryImages.indexOf(selectedImage??""));setSelectedImage(galleryImages[(current+offset+galleryImages.length)%galleryImages.length])},[galleryImages,selectedImage]);
   useEffect(() => {
     if (!lightbox) return;
-    const close = (event: KeyboardEvent) =>
-      event.key === "Escape" && setLightbox(false);
-    addEventListener("keydown", close);
-    return () => removeEventListener("keydown", close);
-  }, [lightbox]);
+    const key = (event: KeyboardEvent) => {
+      if(event.key === "Escape") setLightbox(false);
+      if(event.key === "ArrowLeft") selectOffset(-1);
+      if(event.key === "ArrowRight") selectOffset(1);
+    };
+    document.body.style.overflow="hidden";addEventListener("keydown", key);
+    return () => {document.body.style.overflow="";removeEventListener("keydown", key)};
+  },[lightbox,selectOffset]);
   const syncCart = () => {
     if (cartQuantity) {
       setQuantity(p.id, q);
@@ -55,7 +63,7 @@ export function ProductDetail({
   };
   const categorySlug = p.category.toLowerCase().replaceAll(" ", "-");
   return (
-    <div className="container section">
+    <div className="container section product-detail-page">
       <nav className="product-breadcrumb" aria-label="Breadcrumb">
         <Link href="/">Home</Link>
         <span aria-hidden="true">/</span>
@@ -63,10 +71,10 @@ export function ProductDetail({
         <span aria-hidden="true">/</span>
         <span aria-current="page">{p.name}</span>
       </nav>
-      <div className="mt-8 grid gap-10 md:grid-cols-2">
+      <div className="product-detail-layout mt-8">
         <div className="product-gallery">
-          <div
-            className={`product-visual product-zoom h-[430px] rounded-xl ${selectedImage ? "has-image" : ""} ${zooming ? "zooming" : ""}`}
+          <div className="product-stage-wrap"><div
+            className={`product-visual product-zoom ${selectedImage ? "has-image" : ""} ${zooming ? "zooming" : ""}`}
             style={{ background: p.color }}
             onMouseEnter={() => selectedImage && setZooming(true)}
             onMouseLeave={() => setZooming(false)}
@@ -78,6 +86,10 @@ export function ProductDetail({
               });
             }}
             onClick={() => selectedImage && setLightbox(true)}
+            role="button"
+            tabIndex={selectedImage?0:-1}
+            aria-label="Open full product image"
+            onKeyDown={e=>(e.key==="Enter"||e.key===" ")&&setLightbox(true)}
           >
             {selectedImage && (
               <img
@@ -87,11 +99,9 @@ export function ProductDetail({
               />
             )}
             {selectedImage && (
-              <span className="product-zoom-hint">
-                <ZoomIn /> Click to enlarge
-              </span>
+              <><span className="product-zoom-lens" style={{left:`${zoomPoint.x}%`,top:`${zoomPoint.y}%`}}/><span className="product-zoom-hint"><ZoomIn /> Hover to zoom</span></>
             )}
-          </div>
+          </div>{galleryImages.length>1&&<><button type="button" className="gallery-arrow prev" onClick={()=>selectOffset(-1)} aria-label="Previous image"><ChevronLeft/></button><button type="button" className="gallery-arrow next" onClick={()=>selectOffset(1)} aria-label="Next image"><ChevronRight/></button></>}<button type="button" className="gallery-full" onClick={()=>setLightbox(true)} aria-label="View full screen"><Maximize2/></button></div>
           {zooming && selectedImage && (
             <div
               className="product-zoom-panel"
@@ -102,7 +112,8 @@ export function ProductDetail({
               aria-hidden="true"
             />
           )}
-          <div className="mt-3 grid grid-cols-4 gap-3">
+          <button className="gallery-view-label" type="button" onClick={()=>selectedImage&&setLightbox(true)}><Maximize2/> Click to see full view</button>
+          <div className="product-thumbnails">
             {(p.images?.length
               ? p.images
               : [undefined, undefined, undefined, undefined]
@@ -113,13 +124,14 @@ export function ProductDetail({
                 className={`product-visual h-20 rounded ${image ? "has-image" : ""} ${image === selectedImage ? "selected" : ""}`}
                 style={{ background: p.color }}
                 onClick={() => image && setSelectedImage(image)}
+                aria-label={`View product image ${n+1}`}
               >
                 {image && <img src={image} alt={`${p.name} view ${n + 1}`} />}
               </button>
             ))}
           </div>
         </div>
-        <div>
+        <div className="product-purchase-panel">
           <div className="eyebrow">{p.brand}</div>
           <h1 className="mt-2 text-3xl font-black tracking-tight">{p.name}</h1>
           <div className="mt-3 flex gap-3 text-sm">
@@ -260,14 +272,17 @@ export function ProductDetail({
             event.target === event.currentTarget && setLightbox(false)
           }
         >
-          <button
+          <button className="lightbox-close"
             type="button"
             onClick={() => setLightbox(false)}
             aria-label="Close image preview"
           >
             <X />
           </button>
+          {galleryImages.length>1&&<button className="lightbox-arrow prev" onClick={()=>selectOffset(-1)} aria-label="Previous image"><ChevronLeft/></button>}
           <img src={selectedImage} alt={p.name} />
+          {galleryImages.length>1&&<button className="lightbox-arrow next" onClick={()=>selectOffset(1)} aria-label="Next image"><ChevronRight/></button>}
+          <span className="lightbox-count">{Math.max(1,galleryImages.indexOf(selectedImage)+1)} / {Math.max(1,galleryImages.length)}</span>
         </div>
       )}
     </div>

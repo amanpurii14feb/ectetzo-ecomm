@@ -1,5 +1,7 @@
 export type AdminModule={title:string;description:string;primary:string;fields:string[];rows:string[][]};
 export const modules:Record<string,AdminModule>={
+ "contact-messages":{title:"Contact messages",description:"Review customer support enquiries.",primary:"Add message",fields:["Customer","Contact","Message","Status"],rows:[]},
+ "newsletter":{title:"Newsletter subscribers",description:"Manage locally captured newsletter subscribers.",primary:"Add subscriber",fields:["Email","Status","Subscribed"],rows:[]},
  "products/categories":{title:"Categories",description:"Organize products in a clear hierarchy.",primary:"Add category",fields:["Name","Parent category","SEO slug","Sort order"],rows:[["Wires & Cables","Root category","Active"],["Lighting","Root category","Active"],["Switches & Sockets","Root category","Active"]]},
  "products/collections":{title:"Collections",description:"Create manual and automated product groups.",primary:"Create collection",fields:["Collection","Type","Products","Status"],rows:[["Best sellers","Automated","12","Active"],["New arrivals","Manual","8","Active"]]},
  "products/brands":{title:"Brands",description:"Manage vendor identity and brand metadata.",primary:"Add brand",fields:["Brand","Website","Products","Status"],rows:[["Havells","havells.com","4","Active"],["Schneider Electric","se.com","5","Active"]]},

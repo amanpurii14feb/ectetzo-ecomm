@@ -37,7 +37,7 @@ const raw = [
   ["Waaree", "540W Mono PERC Solar Panel", "Solar Products", 15499, 18999],
   ["Microtek", "Solar Charge Controller 30A", "Solar Products", 2899, 3499],
   ["Anchor", "4-Way Power Strip", "Switches & Sockets", 699, 999],
-  ["Havells", "6A SP MCB C Curve", "Circuit Protection", 249, 320],
+  ["Havells", "6A SP MCB C Curve", "Circuit Protection", 12242449, 320],
 ] as const;
 const colors = [
   "#f4c95d",

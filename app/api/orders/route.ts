@@ -32,20 +32,16 @@ export async function POST(request: Request) {
   if (!parsed.success) return NextResponse.json({ error: "Invalid checkout details." }, { status: 400 });
 
   const requested = new Map(parsed.data.items.map((item) => [item.productId, item.quantity]));
-  const products = await prisma.product.findMany({ where: { legacyId: { in: [...requested.keys()] }, active: true } });
-  if (products.length !== requested.size) return NextResponse.json({ error: "One or more products are unavailable." }, { status: 400 });
-  for (const product of products) {
-    if (product.stock < (requested.get(product.legacyId) ?? 0)) {
-      return NextResponse.json({ error: `${product.name} has insufficient stock.` }, { status: 409 });
-    }
-  }
-
-  const subtotal = products.reduce((sum, product) => sum + product.price * (requested.get(product.legacyId) ?? 0), 0);
   const orderNumber = `VZ${Date.now().toString(36).toUpperCase()}`;
-  const order = await prisma.$transaction(async (tx) => {
+  try { const order = await prisma.$transaction(async (tx) => {
+    const products = await tx.product.findMany({ where: { legacyId: { in: [...requested.keys()] }, active: true } });
+    if (products.length !== requested.size) throw new Error("UNAVAILABLE");
     for (const product of products) {
-      await tx.product.update({ where: { id: product.id }, data: { stock: { decrement: requested.get(product.legacyId) ?? 0 } } });
+      const quantity=requested.get(product.legacyId)??0;
+      const changed=await tx.product.updateMany({where:{id:product.id,stock:{gte:quantity}},data:{stock:{decrement:quantity}}});
+      if(!changed.count)throw new Error(`STOCK:${product.name}`);
     }
+    const subtotal = products.reduce((sum, product) => sum + product.price * (requested.get(product.legacyId) ?? 0), 0);
     return tx.order.create({
       data: {
         orderNumber,
@@ -70,4 +66,10 @@ export async function POST(request: Request) {
     });
   });
   return NextResponse.json({ order }, { status: 201 });
+  } catch(error) {
+    const message=error instanceof Error?error.message:"";
+    if(message==="UNAVAILABLE")return NextResponse.json({error:"One or more products are unavailable."},{status:400});
+    if(message.startsWith("STOCK:"))return NextResponse.json({error:`${message.slice(6)} has insufficient stock.`},{status:409});
+    throw error;
+  }
 }
