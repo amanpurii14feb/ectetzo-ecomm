@@ -14,9 +14,14 @@ import {
   ZoomIn,
 } from "lucide-react";
 import { ProductGrid } from "./product-grid";
-import { products } from "@/data/products";
 import { useRouter } from "next/navigation";
-export function ProductDetail({ p }: { p: Product }) {
+export function ProductDetail({
+  p,
+  related = [],
+}: {
+  p: Product;
+  related?: Product[];
+}) {
   const [q, setQ] = useState(1),
     [tab, setTab] = useState("Description"),
     [pin, setPin] = useState(""),
@@ -244,11 +249,7 @@ export function ProductDetail({ p }: { p: Product }) {
             : `${p.description} Built to meet demanding applications with consistent performance, dependable materials and straightforward installation.`}
       </div>
       <h2 className="section-title mb-8 mt-10">Similar products</h2>
-      <ProductGrid
-        items={products
-          .filter((x) => x.category === p.category && x.id !== p.id)
-          .slice(0, 4)}
-      />
+      <ProductGrid items={related} />
       {lightbox && selectedImage && (
         <div
           className="product-lightbox"

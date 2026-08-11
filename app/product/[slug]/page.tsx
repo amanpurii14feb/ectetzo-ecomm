@@ -8,7 +8,15 @@ export default async function Page({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params,
-    p = (await getStoreProducts()).find((x) => x.slug === slug);
+    products = await getStoreProducts(),
+    p = products.find((x) => x.slug === slug);
   if (!p) notFound();
-  return <ProductDetail p={p} />;
+  return (
+    <ProductDetail
+      p={p}
+      related={products
+        .filter((x) => x.category === p.category && x.id !== p.id)
+        .slice(0, 4)}
+    />
+  );
 }

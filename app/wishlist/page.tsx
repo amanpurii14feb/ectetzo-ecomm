@@ -1,9 +1,10 @@
 "use client";
-import { products } from "@/data/products";
+import { useProducts } from "@/lib/use-products";
 import { useStore } from "@/stores/use-store";
 import { ProductGrid } from "@/components/product-grid";
 import Link from "next/link";
 export default function Page() {
+  const { products } = useProducts();
   const ids = useStore((s) => s.wishlist),
     items = products.filter((p) => ids.includes(p.id));
   return (

@@ -11,6 +11,7 @@ import {
   UploadCloud,
 } from "lucide-react";
 import { PageHeader } from "./ui";
+import { Checkbox, Select } from "@/components/ui/radix";
 type P = {
   id?: string;
   name: string;
@@ -21,6 +22,12 @@ type P = {
   price: number;
   mrp: number;
   stock: number;
+  lowStockThreshold: number;
+  costPrice: number | null;
+  barcode: string | null;
+  weightKg: number | null;
+  dimensions: string | null;
+  tags: string[];
   rating: number;
   reviews: number;
   badge: string | null;
@@ -38,6 +45,12 @@ const blank: P = {
   price: 0,
   mrp: 0,
   stock: 0,
+  lowStockThreshold: 5,
+  costPrice: null,
+  barcode: null,
+  weightKg: null,
+  dimensions: null,
+  tags: [],
   rating: 0,
   reviews: 0,
   badge: "",
@@ -46,7 +59,15 @@ const blank: P = {
   active: false,
   specs: { Warranty: "1 Year", Country: "India" },
 };
-export function ProductEditor({ product }: { product?: P }) {
+export function ProductEditor({
+  product,
+  categories = [],
+  brands = [],
+}: {
+  product?: P;
+  categories?: string[];
+  brands?: string[];
+}) {
   const router = useRouter();
   const fileInput = useRef<HTMLInputElement>(null);
   const [p, setP] = useState<P>(() =>
@@ -308,7 +329,17 @@ export function ProductEditor({ product }: { product?: P }) {
               <Field label="Cost per item">
                 <div className="adm-prefix">
                   <span>₹</span>
-                  <input type="number" placeholder="0.00" />
+                  <input
+                    type="number"
+                    min="0"
+                    value={p.costPrice ?? ""}
+                    onChange={(e) =>
+                      set(
+                        "costPrice",
+                        e.target.value === "" ? null : +e.target.value,
+                      )
+                    }
+                  />
                 </div>
               </Field>
               <div className="adm-calc">
@@ -335,7 +366,11 @@ export function ProductEditor({ product }: { product?: P }) {
                 />
               </Field>
               <Field label="Barcode">
-                <input placeholder="ISBN, UPC, GTIN" />
+                <input
+                  placeholder="ISBN, UPC, GTIN"
+                  value={p.barcode ?? ""}
+                  onChange={(e) => set("barcode", e.target.value || null)}
+                />
               </Field>
               <Field label="Quantity">
                 <input
@@ -346,27 +381,46 @@ export function ProductEditor({ product }: { product?: P }) {
                 />
               </Field>
               <Field label="Low stock threshold">
-                <input type="number" defaultValue="5" />
+                <input
+                  type="number"
+                  min="0"
+                  value={p.lowStockThreshold}
+                  onChange={(e) => set("lowStockThreshold", +e.target.value)}
+                />
               </Field>
             </div>
             <label className="adm-check">
-              <input type="checkbox" defaultChecked /> Track quantity
+              <Checkbox defaultChecked /> Track quantity
             </label>
             <label className="adm-check">
-              <input type="checkbox" /> Continue selling when out of stock
+              <Checkbox /> Continue selling when out of stock
             </label>
           </FormSection>
           <FormSection title="Shipping">
             <label className="adm-check">
-              <input type="checkbox" defaultChecked /> This is a physical
-              product
+              <Checkbox defaultChecked /> This is a physical product
             </label>
             <div className="adm-form-cols">
               <Field label="Weight (kg)">
-                <input type="number" step=".01" />
+                <input
+                  type="number"
+                  min="0"
+                  step=".01"
+                  value={p.weightKg ?? ""}
+                  onChange={(e) =>
+                    set(
+                      "weightKg",
+                      e.target.value === "" ? null : +e.target.value,
+                    )
+                  }
+                />
               </Field>
               <Field label="Dimensions (cm)">
-                <input placeholder="L × W × H" />
+                <input
+                  placeholder="L × W × H"
+                  value={p.dimensions ?? ""}
+                  onChange={(e) => set("dimensions", e.target.value || null)}
+                />
               </Field>
             </div>
           </FormSection>
@@ -401,25 +455,47 @@ export function ProductEditor({ product }: { product?: P }) {
         </main>
         <aside className="adm-editor-side">
           <FormSection title="Status">
-            <select
+            <Select
               value={p.active ? "active" : "draft"}
-              onChange={(e) => set("active", e.target.value === "active")}
-            >
-              <option value="active">Active</option>
-              <option value="draft">Draft</option>
-            </select>
+              onValueChange={(value) => set("active", value === "active")}
+              options={[
+                { value: "active", label: "Active" },
+                { value: "draft", label: "Draft" },
+              ]}
+            />
           </FormSection>
           <FormSection title="Organization">
             <Field label="Category">
-              <input
+              <Select
                 value={p.category}
-                onChange={(e) => set("category", e.target.value)}
+                onValueChange={(value) => set("category", value)}
+                placeholder="Choose a category"
+                options={[
+                  ...(p.category && !categories.includes(p.category)
+                    ? [{ value: p.category, label: `${p.category} (inactive)` }]
+                    : []),
+                  ...categories.map((category) => ({
+                    value: category,
+                    label: category,
+                  })),
+                ]}
               />
+              <small>
+                Select an existing category to place the product on that
+                storefront category page.
+              </small>
             </Field>
             <Field label="Brand / Vendor">
-              <input
+              <Select
                 value={p.brand}
-                onChange={(e) => set("brand", e.target.value)}
+                onValueChange={(value) => set("brand", value)}
+                placeholder="Choose a brand"
+                options={[
+                  ...(p.brand && !brands.includes(p.brand)
+                    ? [{ value: p.brand, label: `${p.brand} (inactive)` }]
+                    : []),
+                  ...brands.map((brand) => ({ value: brand, label: brand })),
+                ]}
               />
             </Field>
             <Field label="Badge">
@@ -429,7 +505,19 @@ export function ProductEditor({ product }: { product?: P }) {
               />
             </Field>
             <Field label="Tags">
-              <input placeholder="Add tags separated by commas" />
+              <input
+                placeholder="Add tags separated by commas"
+                value={p.tags.join(", ")}
+                onChange={(e) =>
+                  set(
+                    "tags",
+                    e.target.value
+                      .split(",")
+                      .map((tag) => tag.trim())
+                      .filter(Boolean),
+                  )
+                }
+              />
             </Field>
           </FormSection>
           <FormSection title="Appearance">

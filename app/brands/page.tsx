@@ -1,6 +1,19 @@
-import { brands, products } from "@/data/products";
 import Link from "next/link";
-export default function Page() {
+import { prisma } from "@/lib/prisma";
+export const dynamic = "force-dynamic";
+export default async function Page() {
+  const [brands, counts] = await Promise.all([
+      prisma.brand.findMany({
+        where: { active: true },
+        orderBy: { name: "asc" },
+      }),
+      prisma.product.groupBy({
+        by: ["brand"],
+        where: { active: true },
+        _count: { _all: true },
+      }),
+    ]),
+    map = new Map(counts.map((x) => [x.brand, x._count._all]));
   return (
     <div className="container section">
       <div className="eyebrow">Authorised selection</div>
@@ -12,12 +25,12 @@ export default function Page() {
         {brands.map((b) => (
           <Link
             className="card p-8 text-center"
-            href={"/brand/" + b.toLowerCase().replaceAll(" ", "-")}
-            key={b}
+            href={`/brand/${b.slug}`}
+            key={b.id}
           >
-            <b className="text-xl">{b}</b>
+            <b className="text-xl">{b.name}</b>
             <span className="mt-2 block text-xs muted">
-              {products.filter((p) => p.brand === b).length} products
+              {map.get(b.name) ?? 0} products
             </span>
           </Link>
         ))}

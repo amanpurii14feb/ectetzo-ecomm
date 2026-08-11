@@ -2314,3 +2314,59 @@ body:has(.adm-login) {
 .admin-gate-overline {
   font-size: 10px;
 }
+
+/* Readable admin typography */
+.adm-app { font-size: 15px; }
+.adm-nav-row > a { font-size: 14px; }
+.adm-subnav a { font-size: 13px; }
+.adm-side-brand b { font-size: 17px; }
+.adm-side-brand small,
+.adm-side-bottom small,
+.adm-head-profile small { font-size: 11px; }
+.adm-side-bottom b,
+.adm-head-profile b { font-size: 13px; }
+.adm-breadcrumb,
+.adm-global-search,
+.adm-quick,
+.adm-btn,
+.adm-select { font-size: 13px; }
+.adm-page-head h1 { font-size: 30px; }
+.adm-page-head p { font-size: 14px; }
+.adm-form-section h2,
+.adm-panel-head h2,
+.adm-order-card h2 { font-size: 15px; }
+.adm-form-section header p,
+.adm-panel-head p { font-size: 12px; }
+.adm-field > b { font-size: 13px; }
+.adm-field > small { color: var(--adm-muted); font-size: 11px; line-height: 1.45; }
+.adm-field input,
+.adm-field textarea,
+.adm-field select,
+.adm-note { font-size: 14px; }
+.adm-check,
+.adm-calc { font-size: 13px; }
+.adm-uploader b { font-size: 14px; }
+.adm-uploader p { font-size: 12px; }
+.adm-tabs button,
+.adm-filterbar label input,
+.adm-filterbar > select,
+.adm-filterbar > input { font-size: 13px; }
+.adm-data th { font-size: 11px; }
+.adm-data td,
+.adm-product p > a,
+.adm-product p > b { font-size: 13px; }
+.adm-data td > small,
+.adm-product small,
+.adm-inventory-list small { font-size: 11px; }
+.adm-badge,
+.adm-pagination,
+.adm-unsaved,
+.adm-form-alert,
+.adm-toast { font-size: 12px; }
+.adm-menu-pop a,
+.adm-profile-pop > a,
+.adm-profile-pop > button,
+.adm-notify-pop p > b { font-size: 13px; }
+.adm-notify-pop small,
+.adm-notify-pop > a,
+.adm-notify-pop header button { font-size: 11px; }

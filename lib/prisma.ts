@@ -23,8 +23,16 @@ function databaseUrl() {
   }
 }
 
+const cachedPrisma = globalForPrisma.prisma;
+const schemaCurrent =
+  cachedPrisma &&
+  "category" in cachedPrisma &&
+  "brand" in cachedPrisma &&
+  "adminRecord" in cachedPrisma &&
+  "storeSetting" in cachedPrisma;
+
 export const prisma =
-  globalForPrisma.prisma ??
+  (schemaCurrent ? cachedPrisma : undefined) ??
   new PrismaClient({
     datasourceUrl: databaseUrl(),
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { products } from "@/data/products";
+import { useProducts } from "@/lib/use-products";
 import { useStore } from "@/stores/use-store";
 import {
   ArrowRight,
@@ -24,6 +24,7 @@ const FREE_SHIPPING_AT = 999;
 const COUPON = "ELECTZO10";
 
 export default function Cart() {
+  const { products, loading: productsLoading } = useProducts();
   const [coupon, setCoupon] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState("");
   const [couponError, setCouponError] = useState("");
@@ -96,7 +97,7 @@ export default function Cart() {
           )}
         </div>
 
-        {!hydrated ? (
+        {!hydrated || productsLoading ? (
           <div className="cart-loading">
             <span />
             <span />

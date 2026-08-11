@@ -14,6 +14,7 @@ import {
   Upload,
 } from "lucide-react";
 import { PageHeader, StatusBadge } from "./ui";
+import { Checkbox } from "@/components/ui/radix";
 export type AP = {
   id: string;
   legacyId: number;
@@ -177,15 +178,14 @@ export function ProductsTable({ initial }: { initial: AP[] }) {
             <thead>
               <tr>
                 <th>
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={
                       visible.length > 0 &&
                       visible.every((p) => selected.includes(p.id))
                     }
-                    onChange={(e) =>
+                    onCheckedChange={(checked) =>
                       setSelected(
-                        e.target.checked
+                        checked
                           ? [
                               ...new Set([
                                 ...selected,
@@ -213,10 +213,9 @@ export function ProductsTable({ initial }: { initial: AP[] }) {
               {visible.map((p) => (
                 <tr key={p.id}>
                   <td>
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={selected.includes(p.id)}
-                      onChange={() =>
+                      onCheckedChange={() =>
                         setSelected((s) =>
                           s.includes(p.id)
                             ? s.filter((x) => x !== p.id)

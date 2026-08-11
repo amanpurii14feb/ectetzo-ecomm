@@ -6,13 +6,23 @@ import {
   ShieldCheck,
   Truck,
 } from "lucide-react";
-import { brands, categories } from "@/data/products";
 import { getStoreProducts } from "@/lib/store-products";
+import { prisma } from "@/lib/prisma";
 import { ProductGrid } from "@/components/product-grid";
 import { NewsletterForm } from "@/components/newsletter-form";
 export const dynamic = "force-dynamic";
 export default async function Home() {
-  const products = await getStoreProducts();
+  const [products, categories, brands] = await Promise.all([
+    getStoreProducts(),
+    prisma.category.findMany({
+      where: { active: true },
+      orderBy: { name: "asc" },
+    }),
+    prisma.brand.findMany({
+      where: { active: true },
+      orderBy: { name: "asc" },
+    }),
+  ]);
   return (
     <>
       <section className="relative overflow-hidden bg-ink text-white">
@@ -52,12 +62,6 @@ export default async function Home() {
               </span>
             </div>
           </div>
-          <div className="relative hidden h-full md:block">
-            <div className="absolute right-8 top-1/2 h-72 w-72 -translate-y-1/2 rounded-3xl bg-gradient-to-br from-white to-gray-300 shadow-2xl rotate-6" />
-            <div className="absolute right-36 top-1/2 grid h-48 w-36 -translate-y-1/2 place-items-center rounded-2xl bg-volt text-7xl font-black text-ink shadow-2xl -rotate-6">
-              V
-            </div>
-          </div>
         </div>
       </section>
       <section className="container section">
@@ -73,14 +77,14 @@ export default async function Home() {
         <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-7">
           {categories.slice(0, 14).map((c, i) => (
             <Link
-              href={"/category/" + c.toLowerCase().replaceAll(" ", "-")}
+              href={"/category/" + c.slug}
               className="card group p-4 hover:border-volt"
-              key={c}
+              key={c.id}
             >
               <div className="mb-6 grid h-12 w-12 place-items-center rounded-full bg-paper text-xl font-black">
                 {i + 1}
               </div>
-              <b className="text-sm">{c}</b>
+              <b className="text-sm">{c.name}</b>
             </Link>
           ))}
         </div>
@@ -98,11 +102,11 @@ export default async function Home() {
         <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border bg-gray-200 md:grid-cols-4">
           {brands.map((b) => (
             <Link
-              href={"/brand/" + b.toLowerCase().replaceAll(" ", "-")}
+              href={"/brand/" + b.slug}
               className="grid h-28 place-items-center bg-white text-center text-lg font-black"
-              key={b}
+              key={b.id}
             >
-              {b}
+              {b.name}
             </Link>
           ))}
         </div>

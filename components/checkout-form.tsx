@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { products } from "@/data/products";
+import { useProducts } from "@/lib/use-products";
 import { useStore } from "@/stores/use-store";
 const schema = z.object({
   email: z.string().email(),
@@ -17,6 +17,7 @@ const schema = z.object({
 });
 type Form = z.infer<typeof schema>;
 export function CheckoutForm() {
+  const { products } = useProducts();
   const r = useRouter(),
     cart = useStore((s) => s.cart),
     clearCart = useStore((s) => s.clearCart);
@@ -35,7 +36,10 @@ export function CheckoutForm() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...values,
-        items: items.map((product) => ({ productId: product.id, quantity: cart[product.id] })),
+        items: items.map((product) => ({
+          productId: product.id,
+          quantity: cart[product.id],
+        })),
       }),
     });
     const body = await response.json();
@@ -51,10 +55,7 @@ export function CheckoutForm() {
     r.push(`/order-success?order=${body.order.orderNumber}`);
   }
   return (
-    <form
-      onSubmit={handleSubmit(placeOrder)}
-      className="container section"
-    >
+    <form onSubmit={handleSubmit(placeOrder)} className="container section">
       <h1 className="section-title">Secure checkout</h1>
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_380px]">
         <div className="space-y-6">
@@ -110,9 +111,12 @@ export function CheckoutForm() {
           <section className="card p-6">
             <h2 className="text-xl font-black">4. Payment</h2>
             <p className="mt-1 text-sm muted">
-              Online payment will be added later. This order will use Cash on Delivery.
+              Online payment will be added later. This order will use Cash on
+              Delivery.
             </p>
-            <div className="mt-5 rounded border border-volt p-4 font-bold">Cash on Delivery</div>
+            <div className="mt-5 rounded border border-volt p-4 font-bold">
+              Cash on Delivery
+            </div>
           </section>
         </div>
         <aside className="card h-fit p-6 lg:sticky lg:top-4">
@@ -131,8 +135,15 @@ export function CheckoutForm() {
             <b>Total</b>
             <b>₹{total.toLocaleString("en-IN")}</b>
           </div>
-          {serverError && <p className="mt-4 text-sm text-red-600">{serverError}</p>}
-          <button disabled={!items.length} className="btn btn-yellow mt-6 w-full">Place order</button>
+          {serverError && (
+            <p className="mt-4 text-sm text-red-600">{serverError}</p>
+          )}
+          <button
+            disabled={!items.length}
+            className="btn btn-yellow mt-6 w-full"
+          >
+            Place order
+          </button>
         </aside>
       </div>
     </form>

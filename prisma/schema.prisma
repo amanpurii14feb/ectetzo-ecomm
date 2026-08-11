@@ -69,6 +69,12 @@ model Product {
   price       Int
   mrp         Int
   stock       Int            @default(0)
+  lowStockThreshold Int      @default(5)
+  costPrice   Int?
+  barcode     String?
+  weightKg    Float?
+  dimensions  String?
+  tags        String[]       @default([])
   rating      Float          @default(0)
   reviews     Int            @default(0)
   badge       String?
@@ -84,6 +90,42 @@ model Product {
 
   @@index([category])
   @@index([brand])
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Brand {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AdminRecord {
+  id        String   @id @default(cuid())
+  module    String
+  name      String
+  status    String   @default("Active")
+  data      Json     @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([module, updatedAt])
+}
+
+model StoreSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
 }
 
 model Address {

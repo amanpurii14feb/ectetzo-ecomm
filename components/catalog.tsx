@@ -5,6 +5,7 @@ import { products as fallbackProducts } from "@/data/products";
 import { ProductGrid } from "./product-grid";
 import type { Product } from "@/lib/types";
 import Link from "next/link";
+import { Checkbox } from "@/components/ui/radix";
 import { useStore } from "@/stores/use-store";
 import {
   ArrowUpRight,
@@ -46,23 +47,32 @@ const toggleValue = (values: string[], value: string) =>
 
 export function Catalog({
   initialCategory,
+  initialCategoryName,
   query,
   items = fallbackProducts,
 }: {
   initialCategory?: string;
+  initialCategoryName?: string;
   query?: string;
   items?: Product[];
 }) {
   const products = items;
   const categories = [...new Set(products.map((product) => product.category))];
   const brands = [...new Set(products.map((product) => product.brand))].sort();
-  const warranties = [...new Set(products.map((product) => product.specs.Warranty).filter(Boolean))];
-  const PRICE_CEILING = Math.max(1000, Math.ceil(Math.max(0, ...products.map((p) => p.price)) / 1000) * 1000);
+  const warranties = [
+    ...new Set(
+      products.map((product) => product.specs.Warranty).filter(Boolean),
+    ),
+  ];
+  const PRICE_CEILING = Math.max(
+    1000,
+    Math.ceil(Math.max(0, ...products.map((p) => p.price)) / 1000) * 1000,
+  );
   const initialCat =
     categories.find(
       (item) =>
         item.toLowerCase().replaceAll(" ", "-") ===
-        initialCategory?.toLowerCase(),
+          initialCategory?.toLowerCase() || item === initialCategoryName,
     ) ?? "";
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
     initialCat ? [initialCat] : [],
@@ -297,12 +307,14 @@ export function Catalog({
     disabled: boolean,
     onChange: () => void,
   ) => (
-    <label key={key} className={`facet-option ${disabled && !checked ? "disabled" : ""}`}>
-      <input
-        type="checkbox"
+    <label
+      key={key}
+      className={`facet-option ${disabled && !checked ? "disabled" : ""}`}
+    >
+      <Checkbox
         checked={checked}
         disabled={disabled && !checked}
-        onChange={onChange}
+        onCheckedChange={onChange}
       />
       <span>{label}</span>
       <small>{count}</small>
@@ -639,13 +651,19 @@ export function Catalog({
       <section className="catalog-hero">
         <div className="container">
           <div className="catalog-breadcrumb">
-            <span>Home</span>
+            <Link href="/">Home</Link>
             <ChevronDown size={13} />
-            <span>Shop</span>
+            <Link href="/shop">Shop</Link>
             {initialCat && (
               <>
                 <ChevronDown size={13} />
-                <b>{initialCat}</b>
+                <Link
+                  className="current"
+                  href={`/category/${initialCategory}`}
+                  aria-current="page"
+                >
+                  {initialCat}
+                </Link>
               </>
             )}
           </div>

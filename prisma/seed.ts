@@ -41,6 +41,19 @@ async function main() {
       },
     });
   }
+  for (const name of [
+    ...new Set(products.map((product) => product.category)),
+  ]) {
+    const slug = name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+    await prisma.category.upsert({
+      where: { name },
+      update: { slug, active: true },
+      create: { name, slug, active: true },
+    });
+  }
   const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
   const adminPassword = process.env.ADMIN_PASSWORD;
   if (adminEmail && adminPassword) {
@@ -60,7 +73,9 @@ async function main() {
     });
     console.log(`Seeded admin account: ${adminEmail}`);
   } else {
-    console.log("Skipped admin account: ADMIN_EMAIL or ADMIN_PASSWORD is missing.");
+    console.log(
+      "Skipped admin account: ADMIN_EMAIL or ADMIN_PASSWORD is missing.",
+    );
   }
   console.log(`Seeded ${products.length} products.`);
 }
