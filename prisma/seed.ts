@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { products } from "../data/products";
+import { hash } from "bcryptjs";
 
 const prisma = new PrismaClient();
 
@@ -39,6 +40,27 @@ async function main() {
         specs: product.specs,
       },
     });
+  }
+  const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (adminEmail && adminPassword) {
+    if (adminPassword.length < 12) {
+      throw new Error("ADMIN_PASSWORD must contain at least 12 characters.");
+    }
+    const passwordHash = await hash(adminPassword, 12);
+    await prisma.user.upsert({
+      where: { email: adminEmail },
+      update: { name: "Electzo Administrator", passwordHash, role: "ADMIN" },
+      create: {
+        name: "Electzo Administrator",
+        email: adminEmail,
+        passwordHash,
+        role: "ADMIN",
+      },
+    });
+    console.log(`Seeded admin account: ${adminEmail}`);
+  } else {
+    console.log("Skipped admin account: ADMIN_EMAIL or ADMIN_PASSWORD is missing.");
   }
   console.log(`Seeded ${products.length} products.`);
 }

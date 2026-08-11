@@ -3,14 +3,27 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { Product } from "@/lib/types";
 import { useStore } from "@/stores/use-store";
-import { Heart, Minus, Plus, ShieldCheck, Star, Truck } from "lucide-react";
+import {
+  Heart,
+  Minus,
+  Plus,
+  ShieldCheck,
+  Star,
+  Truck,
+  X,
+  ZoomIn,
+} from "lucide-react";
 import { ProductGrid } from "./product-grid";
 import { products } from "@/data/products";
 import { useRouter } from "next/navigation";
 export function ProductDetail({ p }: { p: Product }) {
   const [q, setQ] = useState(1),
     [tab, setTab] = useState("Description"),
-    [pin, setPin] = useState("");
+    [pin, setPin] = useState(""),
+    [selectedImage, setSelectedImage] = useState(p.images?.[0]),
+    [zooming, setZooming] = useState(false),
+    [zoomPoint, setZoomPoint] = useState({ x: 50, y: 50 }),
+    [lightbox, setLightbox] = useState(false);
   const router = useRouter();
   const add = useStore((s) => s.add),
     setQuantity = useStore((s) => s.quantity),
@@ -20,6 +33,13 @@ export function ProductDetail({ p }: { p: Product }) {
   useEffect(() => {
     if (hydrated) setQ(cartQuantity || 1);
   }, [cartQuantity, hydrated]);
+  useEffect(() => {
+    if (!lightbox) return;
+    const close = (event: KeyboardEvent) =>
+      event.key === "Escape" && setLightbox(false);
+    addEventListener("keydown", close);
+    return () => removeEventListener("keydown", close);
+  }, [lightbox]);
   const syncCart = () => {
     if (cartQuantity) {
       setQuantity(p.id, q);
@@ -39,18 +59,58 @@ export function ProductDetail({ p }: { p: Product }) {
         <span aria-current="page">{p.name}</span>
       </nav>
       <div className="mt-8 grid gap-10 md:grid-cols-2">
-        <div>
+        <div className="product-gallery">
           <div
-            className="product-visual h-[430px] rounded-xl"
+            className={`product-visual product-zoom h-[430px] rounded-xl ${selectedImage ? "has-image" : ""} ${zooming ? "zooming" : ""}`}
             style={{ background: p.color }}
-          />
-          <div className="mt-3 grid grid-cols-4 gap-3">
-            {[1, 2, 3, 4].map((n) => (
-              <div
-                key={n}
-                className="product-visual h-20 rounded"
-                style={{ background: p.color }}
+            onMouseEnter={() => selectedImage && setZooming(true)}
+            onMouseLeave={() => setZooming(false)}
+            onMouseMove={(event) => {
+              const box = event.currentTarget.getBoundingClientRect();
+              setZoomPoint({
+                x: ((event.clientX - box.left) / box.width) * 100,
+                y: ((event.clientY - box.top) / box.height) * 100,
+              });
+            }}
+            onClick={() => selectedImage && setLightbox(true)}
+          >
+            {selectedImage && (
+              <img
+                src={selectedImage}
+                alt={p.name}
+                style={{ transformOrigin: `${zoomPoint.x}% ${zoomPoint.y}%` }}
               />
+            )}
+            {selectedImage && (
+              <span className="product-zoom-hint">
+                <ZoomIn /> Click to enlarge
+              </span>
+            )}
+          </div>
+          {zooming && selectedImage && (
+            <div
+              className="product-zoom-panel"
+              style={{
+                backgroundImage: `url(${selectedImage})`,
+                backgroundPosition: `${zoomPoint.x}% ${zoomPoint.y}%`,
+              }}
+              aria-hidden="true"
+            />
+          )}
+          <div className="mt-3 grid grid-cols-4 gap-3">
+            {(p.images?.length
+              ? p.images
+              : [undefined, undefined, undefined, undefined]
+            ).map((image, n) => (
+              <button
+                type="button"
+                key={n}
+                className={`product-visual h-20 rounded ${image ? "has-image" : ""} ${image === selectedImage ? "selected" : ""}`}
+                style={{ background: p.color }}
+                onClick={() => image && setSelectedImage(image)}
+              >
+                {image && <img src={image} alt={`${p.name} view ${n + 1}`} />}
+              </button>
             ))}
           </div>
         </div>
@@ -189,6 +249,26 @@ export function ProductDetail({ p }: { p: Product }) {
           .filter((x) => x.category === p.category && x.id !== p.id)
           .slice(0, 4)}
       />
+      {lightbox && selectedImage && (
+        <div
+          className="product-lightbox"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${p.name} image preview`}
+          onMouseDown={(event) =>
+            event.target === event.currentTarget && setLightbox(false)
+          }
+        >
+          <button
+            type="button"
+            onClick={() => setLightbox(false)}
+            aria-label="Close image preview"
+          >
+            <X />
+          </button>
+          <img src={selectedImage} alt={p.name} />
+        </div>
+      )}
     </div>
   );
 }

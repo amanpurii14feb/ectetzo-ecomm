@@ -23,6 +23,7 @@ export function ProductCard({
       <div className="product-visual-wrap">
         <Link href={"/product/" + p.slug} aria-label={`View ${p.name}`}>
           <div className="product-visual" style={{ background: p.color }}>
+            {p.images?.[0] && <img src={p.images[0]} alt={p.name} />}
             {p.badge && (
               <span className="absolute left-3 top-3 z-10 rounded bg-ink px-2 py-1 text-[10px] font-bold text-white">
                 {p.badge}

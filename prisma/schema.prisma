@@ -73,6 +73,7 @@ model Product {
   reviews     Int            @default(0)
   badge       String?
   color       String?
+  images      String[]       @default([])
   specs       Json
   active      Boolean        @default(true)
   cartItems   CartItem[]

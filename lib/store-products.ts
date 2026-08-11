@@ -19,8 +19,8 @@ export async function getStoreProducts(): Promise<Product[]> {
     stock: row.stock,
     badge: row.badge ?? undefined,
     color: row.color ?? "#e5e7e8",
+    images: row.images,
     description: row.description,
     specs: row.specs as Record<string, string>,
   }));
 }
-

@@ -13,10 +13,10 @@ export const productSchema = z.object({
   reviews: z.coerce.number().int().min(0),
   badge: z.string().trim().max(40).nullable().optional(),
   color: z.string().trim().min(1).max(120),
+  images: z.array(z.string().trim().startsWith("/api/uploads/")).max(10).default([]),
   active: z.boolean(),
   specs: z.record(z.string(), z.string()),
 }).refine((data) => data.mrp >= data.price, {
   message: "MRP cannot be lower than selling price.",
   path: ["mrp"],
 });
-

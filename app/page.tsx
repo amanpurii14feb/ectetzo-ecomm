@@ -6,10 +6,13 @@ import {
   ShieldCheck,
   Truck,
 } from "lucide-react";
-import { brands, categories, products } from "@/data/products";
+import { brands, categories } from "@/data/products";
+import { getStoreProducts } from "@/lib/store-products";
 import { ProductGrid } from "@/components/product-grid";
 import { NewsletterForm } from "@/components/newsletter-form";
-export default function Home() {
+export const dynamic = "force-dynamic";
+export default async function Home() {
+  const products = await getStoreProducts();
   return (
     <>
       <section className="relative overflow-hidden bg-ink text-white">

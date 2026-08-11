@@ -2,6 +2,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { AuthProvider } from "@/components/auth-provider";
 import { SiteChrome } from "@/components/site-chrome";
+import { ApiLoader } from "@/components/api-loader";
 export const metadata: Metadata = {
   title: "Electzo — Powering Every Connection",
   description:
@@ -12,6 +13,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <html lang="en">
       <body>
         <AuthProvider>
+          <ApiLoader />
           <SiteChrome>{children}</SiteChrome>
         </AuthProvider>
       </body>

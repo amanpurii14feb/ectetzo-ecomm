@@ -11,6 +11,7 @@ export type Product = {
   stock: number;
   badge?: string;
   color: string;
+  images?: string[];
   description: string;
   specs: Record<string, string>;
 };
