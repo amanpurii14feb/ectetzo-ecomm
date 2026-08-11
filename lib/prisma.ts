@@ -14,9 +14,11 @@ function databaseUrl() {
     if (!url.searchParams.has("connect_timeout"))
       url.searchParams.set("connect_timeout", "15");
     if (!url.searchParams.has("pool_timeout"))
-      url.searchParams.set("pool_timeout", "20");
+      url.searchParams.set("pool_timeout", "30");
     if (!url.searchParams.has("connection_limit"))
-      url.searchParams.set("connection_limit", "5");
+      url.searchParams.set("connection_limit", "1");
+    if (url.hostname.includes("-pooler."))
+      url.searchParams.set("pgbouncer", "true");
     return url.toString();
   } catch {
     return value;
