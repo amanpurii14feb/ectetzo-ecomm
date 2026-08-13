@@ -33,6 +33,8 @@ export function AccountShell({ children }: { children: React.ReactNode }) {
             <div>
               <small>Welcome back</small>
               <b title={displayName}>{displayName}</b>
+              <small className="account-email">{session?.user?.email}</small>
+              <em>✓ Verified</em>
             </div>
           </div>
           <nav className="account-nav" aria-label="Account navigation">

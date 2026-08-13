@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { products as fallbackProducts } from "@/data/products";
-import { ProductGrid } from "./product-grid";
+import { VirtualProductGrid } from "./virtual-product-grid";
 import type { Product } from "@/lib/types";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -28,7 +28,6 @@ import {
   X,
 } from "lucide-react";
 
-const PAGE_SIZE = 9;
 const sortOptions = [
   { value: "featured", label: "Featured" },
   { value: "low", label: "Price: Low to high" },
@@ -91,7 +90,6 @@ export function Catalog({
   const [sort, setSort] = useState("featured");
   const [filters, setFilters] = useState(false);
   const [view, setView] = useState<"grid" | "list">("grid");
-  const [page, setPage] = useState(1);
   const [sortOpen, setSortOpen] = useState(false);
   const [urlReady, setUrlReady] = useState(false);
   const [compareIds, setCompareIds] = useState<number[]>([]);
@@ -269,11 +267,8 @@ export function Catalog({
     query,
   ]);
 
-  const pages = Math.ceil(list.length / PAGE_SIZE);
-  const visible = list.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const changeFilter = (fn: () => void) => {
     fn();
-    setPage(1);
   };
   const clearFilters = () => {
     setSelectedCategories([]);
@@ -285,7 +280,6 @@ export function Catalog({
     setSelectedWarranties([]);
     setSelectedDeals([]);
     setInStockOnly(false);
-    setPage(1);
     if (initialCategory) router.replace("/shop");
   };
   const filterCount =
@@ -759,7 +753,6 @@ export function Catalog({
                         key={option.value}
                         onClick={() => {
                           setSort(option.value);
-                          setPage(1);
                           setSortOpen(false);
                         }}
                         className={sort === option.value ? "selected" : ""}
@@ -781,7 +774,6 @@ export function Catalog({
                       key={chip.label}
                       onClick={() => {
                         chip.remove();
-                        setPage(1);
                       }}
                     >
                       {chip.label}
@@ -792,9 +784,9 @@ export function Catalog({
                 <button onClick={clearFilters}>Clear all</button>
               </div>
             )}
-            {visible.length ? (
-              <ProductGrid
-                items={visible}
+            {list.length ? (
+              <VirtualProductGrid
+                items={list}
                 view={view}
                 compareIds={compareIds}
                 onCompare={toggleCompare}
@@ -807,24 +799,6 @@ export function Catalog({
                 <button className="btn btn-yellow" onClick={clearFilters}>
                   Clear filters
                 </button>
-              </div>
-            )}
-            {pages > 1 && (
-              <div className="catalog-pagination">
-                {Array.from({ length: pages }, (_, i) => i + 1).map(
-                  (number) => (
-                    <button
-                      onClick={() => {
-                        setPage(number);
-                        window.scrollTo({ top: 320, behavior: "smooth" });
-                      }}
-                      className={number === page ? "active" : ""}
-                      key={number}
-                    >
-                      {number}
-                    </button>
-                  ),
-                )}
               </div>
             )}
           </div>
