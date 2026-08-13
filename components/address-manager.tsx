@@ -14,12 +14,12 @@ export function AddressManager({initial}:{initial:Address[]}){
  async function save(e:React.FormEvent){e.preventDefault();setBusy(true);setError("");const current=editing!=="new"?editing:null;const r=await fetch(current?`/api/addresses/${current.id}`:"/api/addresses",{method:current?"PATCH":"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(form)});const b=await r.json().catch(()=>({}));setBusy(false);if(!r.ok)return setError(b.error??"Could not save address.");const next=b.address as Address;setRows(x=>[next,...x.filter(i=>i.id!==next.id)].map(i=>next.isDefault&&i.id!==next.id?{...i,isDefault:false}:i));setEditing(null)}
  async function remove(id:string){if(!confirm("Delete this address?"))return;const r=await fetch(`/api/addresses/${id}`,{method:"DELETE"});if(r.ok)setRows(x=>x.filter(i=>i.id!==id))}
  return <section className="address-manager">
+  <button onClick={()=>open()} className="btn btn-yellow address-add"><Plus/> Add new address</button>
   {rows.length?<div className="address-grid">{rows.map(a=><article className={`address-card ${a.isDefault?"is-default":""}`} key={a.id}>
    <header><span className="address-icon">{a.label.toUpperCase()==="HOME"?<Home/>:<MapPin/>}</span><div><span className="address-label">{a.label}</span>{a.isDefault&&<span className="address-default"><Check/> Default</span>}</div></header>
    <div className="address-body"><b>{a.name}</b><p>{a.line1}<br/>{a.city}, {a.state} – {a.pin}</p><a href={`tel:${a.phone}`}>+91 {a.phone}</a></div>
    <footer><button onClick={()=>open(a)}><Pencil/> Edit</button><button onClick={()=>remove(a.id)} className="danger"><Trash2/> Delete</button></footer>
   </article>)}</div>:<div className="address-empty"><span><MapPin/></span><h2>No saved addresses</h2><p>Add an address for a faster checkout experience.</p></div>}
-  <button onClick={()=>open()} className="btn btn-dark address-add"><Plus/> Add new address</button>
   {editing&&<div className="address-modal-backdrop" onMouseDown={e=>e.target===e.currentTarget&&setEditing(null)}><form onSubmit={save} className="address-modal" role="dialog" aria-modal="true" aria-labelledby="address-dialog-title">
    <header><div><span className="eyebrow">Delivery details</span><h2 id="address-dialog-title">{editing==="new"?"Add new address":"Edit address"}</h2></div><button type="button" onClick={()=>setEditing(null)} aria-label="Close address form"><X/></button></header>
    <div className="address-form">{error&&<p className="address-error">{error}</p>}

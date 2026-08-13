@@ -2,6 +2,7 @@ import { AccountShell } from "@/components/account-shell";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
+import { ListFilter } from "lucide-react";
 
 export default async function Page() {
   const session = await auth();
@@ -10,18 +11,12 @@ export default async function Page() {
     : [];
   return (
     <AccountShell>
-      <div>
-        <h1 className="section-title">Your orders</h1>
-        {!orders.length && <div className="card mt-7 p-6"><p className="muted">You have not placed any orders yet.</p><Link className="btn btn-yellow mt-4" href="/shop">Start shopping</Link></div>}
-        {orders.map((order) => (
-          <div className="card mt-7 p-5" key={order.id}>
-            <div className="flex flex-wrap justify-between gap-3">
-              <div><b>Order #{order.orderNumber}</b><p className="text-sm muted">Placed on {order.createdAt.toLocaleDateString("en-IN")} · ₹{order.total.toLocaleString("en-IN")}</p></div>
-              <span className="h-fit rounded bg-green-100 px-3 py-1 text-xs font-bold text-green-700">{order.status}</span>
-            </div>
-            <div className="mt-5 flex justify-between border-t pt-4 text-sm"><span>{order.items.reduce((sum, item) => sum + item.quantity, 0)} items · {order.paymentMethod}</span><Link className="font-bold" href={`/account/orders/${order.orderNumber}`}>View details →</Link></div>
-          </div>
-        ))}
+      <div className="orders-page">
+        <div className="account-section-heading"><div><h1>Orders</h1><p>Track, view and manage all your orders.</p></div><button className="btn btn-outline"><ListFilter/> Filter</button></div>
+        <div className="orders-table-card card"><div className="orders-table-scroll"><table><thead><tr><th>Order ID</th><th>Date</th><th>Items</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead><tbody>
+        {orders.map(order=><tr key={order.id}><td>#{order.orderNumber}</td><td>{order.createdAt.toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"})}</td><td>{order.items.reduce((s,i)=>s+i.quantity,0)} items</td><td>₹{order.total.toLocaleString("en-IN")}</td><td><span className={`order-pill ${order.status.toLowerCase()}`}>{order.status}</span></td><td><Link href={`/account/orders/${order.orderNumber}`}>View</Link></td></tr>)}
+        {!orders.length&&<tr><td colSpan={6} className="orders-empty">You have not placed any orders yet. <Link href="/shop">Start shopping</Link></td></tr>}
+        </tbody></table></div><footer>Showing {orders.length} order{orders.length===1?"":"s"}</footer></div>
       </div>
     </AccountShell>
   );

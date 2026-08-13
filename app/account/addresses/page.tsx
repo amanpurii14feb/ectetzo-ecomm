@@ -8,8 +8,8 @@ export default async function Page() {
   return (
     <AccountShell>
       <div>
-        <h1 className="section-title">Addresses</h1>
-        <div className="mt-7"><AddressManager initial={addresses.map(({id,label,name,phone,line1,city,state,pin,isDefault})=>({id,label,name,phone,line1,city,state,pin,isDefault}))}/></div>
+        <div className="account-section-heading"><div><h1>Saved addresses</h1><p>Manage your delivery addresses.</p></div></div>
+        <AddressManager initial={addresses.map(({id,label,name,phone,line1,city,state,pin,isDefault})=>({id,label,name,phone,line1,city,state,pin,isDefault}))}/>
       </div>
     </AccountShell>
   );

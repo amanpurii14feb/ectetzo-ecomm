@@ -7,6 +7,7 @@ import {
   MapPin,
   Package,
   UserRound,
+  ShieldCheck,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
@@ -17,6 +18,7 @@ const links = [
   ["Profile", "/account/profile", UserRound],
   ["Addresses", "/account/addresses", MapPin],
   ["Wishlist", "/wishlist", Heart],
+  ["Security", "/account/security", ShieldCheck],
 ];
 export function AccountShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
