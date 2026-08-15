@@ -31,6 +31,7 @@
     "react": "latest",
     "react-dom": "latest",
     "react-hook-form": "latest",
+    "sharp": "^0.35.3",
     "zod": "latest",
     "zustand": "latest"
   },

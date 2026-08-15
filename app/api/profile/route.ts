@@ -4,9 +4,9 @@ import { prisma } from "@/lib/prisma";
 import { currentUserId } from "@/lib/current-user";
 
 const schema = z.object({
-  name: z.string().trim().min(2).max(80),
-  phone: z.string().regex(/^\d{10}$/).or(z.literal("")),
-});
+  name: z.string().trim().min(2).max(80).regex(/^[\p{L} .'-]+$/u, "Enter a valid full name."),
+  phone: z.string().regex(/^[6-9]\d{9}$/).or(z.literal("")),
+}).strict();
 
 export async function GET() {
   const id = await currentUserId();

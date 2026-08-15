@@ -4,14 +4,16 @@ import { prisma } from "@/lib/prisma";
 import { currentUserId } from "@/lib/current-user";
 
 const orderSchema = z.object({
-  email: z.string().email(),
-  phone: z.string().regex(/^\d{10}$/),
+  email: z.string().trim().toLowerCase().email().max(254),
+  phone: z.string().regex(/^[6-9]\d{9}$/, "Enter a valid Indian mobile number."),
   name: z.string().trim().min(2).max(80),
   address: z.string().trim().min(8).max(200),
-  city: z.string().trim().min(2).max(80),
-  state: z.string().trim().min(2).max(80),
-  pin: z.string().regex(/^\d{6}$/),
-  items: z.array(z.object({ productId: z.number().int().positive(), quantity: z.number().int().min(1).max(20) })).min(1),
+  city: z.string().trim().min(2).max(80).regex(/^[\p{L} .'-]+$/u, "Enter a valid city."),
+  state: z.string().trim().min(2).max(80).regex(/^[\p{L} .'-]+$/u, "Enter a valid state."),
+  pin: z.string().regex(/^[1-9]\d{5}$/, "Enter a valid PIN code."),
+  items: z.array(z.object({ productId: z.number().int().positive().max(2_147_483_647), quantity: z.number().int().min(1).max(20) }).strict()).min(1).max(100),
+}).strict().refine((data) => new Set(data.items.map((item) => item.productId)).size === data.items.length, {
+  message: "Duplicate products are not allowed.", path: ["items"],
 });
 
 export async function GET() {
@@ -29,7 +31,7 @@ export async function POST(request: Request) {
   const userId = await currentUserId();
   if (!userId) return NextResponse.json({ error: "Please sign in before checkout." }, { status: 401 });
   const parsed = orderSchema.safeParse(await request.json().catch(() => null));
-  if (!parsed.success) return NextResponse.json({ error: "Invalid checkout details." }, { status: 400 });
+  if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid checkout details." }, { status: 400 });
 
   const requested = new Map(parsed.data.items.map((item) => [item.productId, item.quantity]));
   const orderNumber = `VZ${Date.now().toString(36).toUpperCase()}`;

@@ -6,6 +6,8 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q")?.trim();
   const category = searchParams.get("category")?.trim();
+  if ((q && (q.length < 2 || q.length > 100)) || (category && category.length > 80))
+    return NextResponse.json({ error: "Invalid search query." }, { status: 400 });
   if (!q && !category)
     return NextResponse.json({ products: await getStoreProducts() });
   const rows = await prisma.product.findMany({
@@ -23,6 +25,12 @@ export async function GET(request: Request) {
         : {}),
     },
     orderBy: { legacyId: "asc" },
+    take: q ? 20 : undefined,
+    select: {
+      legacyId: true, slug: true, name: true, brand: true, category: true,
+      price: true, mrp: true, rating: true, reviews: true, stock: true,
+      badge: true, color: true, images: true, description: true, specs: true,
+    },
   });
   const products = rows.map((row) => ({
     id: row.legacyId,

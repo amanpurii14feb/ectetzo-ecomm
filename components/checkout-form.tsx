@@ -7,13 +7,13 @@ import { useRouter } from "next/navigation";
 import { useProducts } from "@/lib/use-products";
 import { useStore } from "@/stores/use-store";
 const schema = z.object({
-  email: z.string().email(),
-  phone: z.string().min(10),
-  name: z.string().min(2),
-  address: z.string().min(8),
-  city: z.string().min(2),
-  state: z.string().min(2),
-  pin: z.string().length(6),
+  email: z.string().trim().email().max(254),
+  phone: z.string().regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit mobile number"),
+  name: z.string().trim().min(2).max(80),
+  address: z.string().trim().min(8).max(200),
+  city: z.string().trim().min(2).max(80),
+  state: z.string().trim().min(2).max(80),
+  pin: z.string().regex(/^[1-9]\d{5}$/, "Enter a valid PIN code"),
 });
 type Form = z.infer<typeof schema>;
 export function CheckoutForm() {

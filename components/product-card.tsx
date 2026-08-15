@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { Heart, Scale, ShoppingBag, Star } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { useStore } from "@/stores/use-store";
@@ -23,7 +24,15 @@ export function ProductCard({
       <div className="product-visual-wrap">
         <Link href={"/product/" + p.slug} aria-label={`View ${p.name}`}>
           <div className="product-visual" style={{ background: p.color }}>
-            {p.images?.[0] && <img src={p.images[0]} alt={p.name} />}
+            {p.images?.[0] && (
+              <Image
+                src={p.images[0]}
+                alt={p.name}
+                width={600}
+                height={600}
+                sizes="(max-width: 560px) 100vw, (max-width: 900px) 50vw, 33vw"
+              />
+            )}
             {p.badge && (
               <span className="absolute left-3 top-3 z-10 rounded bg-ink px-2 py-1 text-[10px] font-bold text-white">
                 {p.badge}

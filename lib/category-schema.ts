@@ -12,4 +12,4 @@ export const categorySchema = z.object({
       "Use lowercase letters, numbers and hyphens.",
     ),
   active: z.boolean().default(true),
-});
+}).strict();

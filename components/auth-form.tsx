@@ -9,9 +9,9 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 const schema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
-  name: z.string().optional(),
+  email: z.string().trim().email().max(254),
+  password: z.string().min(6, "Use at least 6 characters").max(100),
+  name: z.string().trim().min(2).max(80).optional(),
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -25,6 +25,10 @@ export function AuthForm({ registering = false, callbackUrl = "/account" }: { re
     if (registering) {
       if (!values.name || values.name.trim().length < 2) {
         setServerError("Please enter your full name.");
+        return;
+      }
+      if (values.password.length < 8 || !/[a-z]/.test(values.password) || !/[A-Z]/.test(values.password) || !/\d/.test(values.password)) {
+        setServerError("Use 8+ characters with uppercase, lowercase and a number.");
         return;
       }
       const response = await fetch("/api/auth/register", {
@@ -53,9 +57,9 @@ export function AuthForm({ registering = false, callbackUrl = "/account" }: { re
         <div className="eyebrow">Welcome to Electzo</div>
         <h1 className="mt-2 text-3xl font-black">{registering ? "Create account" : "Sign in"}</h1>
         <p className="mt-2 text-sm muted">{registering ? "Manage orders, addresses and saved items." : "Access orders and faster checkout."}</p>
-        {registering && <label className="mt-6 block"><span className="label">Full name</span><input className="field" {...register("name")} /></label>}
-        <label className="mt-4 block"><span className="label">Email</span><input type="email" className="field" {...register("email")} /><small className="text-red-600">{errors.email?.message}</small></label>
-        <label className="mt-4 block"><span className="label">Password</span><input type="password" className="field" {...register("password")} /><small className="text-red-600">{errors.password?.message}</small></label>
+        {registering && <label className="mt-6 block"><span className="label">Full name</span><input className="field" autoComplete="name" minLength={2} maxLength={80} {...register("name")} /></label>}
+        <label className="mt-4 block"><span className="label">Email</span><input type="email" className="field" autoComplete="email" maxLength={254} {...register("email")} /><small className="text-red-600">{errors.email?.message}</small></label>
+        <label className="mt-4 block"><span className="label">Password</span><input type="password" className="field" autoComplete={registering ? "new-password" : "current-password"} minLength={registering ? 8 : 6} maxLength={100} {...register("password")} /><small className="text-red-600">{errors.password?.message}</small></label>
         {serverError && <p className="mt-3 text-sm text-red-600">{serverError}</p>}
         <button disabled={isSubmitting} className="btn btn-yellow mt-5 w-full">{isSubmitting ? "Please wait..." : registering ? "Create account" : "Sign in"}</button>
         <button type="button" onClick={() => signIn("google", { callbackUrl: callbackUrl.startsWith("/") ? callbackUrl : "/account" })} className="btn btn-outline mt-3 w-full">Continue with Google</button>

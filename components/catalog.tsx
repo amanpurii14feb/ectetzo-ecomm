@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { products as fallbackProducts } from "@/data/products";
-import { VirtualProductGrid } from "./virtual-product-grid";
 import type { Product } from "@/lib/types";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Checkbox } from "@/components/ui/radix";
@@ -27,6 +27,19 @@ import {
   Scale,
   X,
 } from "lucide-react";
+
+const VirtualProductGrid = dynamic(
+  () => import("./virtual-product-grid").then((module) => module.VirtualProductGrid),
+  {
+    loading: () => (
+      <div className="grid-products" aria-busy="true" aria-label="Loading products">
+        {Array.from({ length: 6 }, (_, index) => (
+          <div className="card h-[390px] animate-pulse bg-gray-100" key={index} />
+        ))}
+      </div>
+    ),
+  },
+);
 
 const sortOptions = [
   { value: "featured", label: "Featured" },

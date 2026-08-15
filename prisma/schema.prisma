@@ -90,6 +90,9 @@ model Product {
 
   @@index([category])
   @@index([brand])
+  @@index([active, legacyId])
+  @@index([active, category])
+  @@index([active, brand])
 }
 
 model Category {
@@ -120,6 +123,7 @@ model AdminRecord {
   updatedAt DateTime @updatedAt
 
   @@index([module, updatedAt])
+  @@index([module, name])
 }
 
 model StoreSetting {
