@@ -9,6 +9,8 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
   AlertCircle,
+  ArrowUpRight,
+  BarChart3,
   Box,
   CheckCircle2,
   Eye,
@@ -94,13 +96,13 @@ export function AuthForm({
   const busy = isSubmitting || transitioning;
 
   return (
-    <div className="relative overflow-hidden bg-[#f7f6f2] py-8 md:py-12 lg:py-16">
+    <div className="auth-page relative overflow-hidden bg-[#f7f6f2] py-5 md:py-7 lg:flex lg:h-dvh lg:items-center lg:py-4">
       {transitioning && <AuthTransition destination={callbackUrl} />}
       <div className="pointer-events-none absolute -left-24 top-10 h-72 w-72 rounded-full bg-volt/10 blur-3xl" />
       <div className="pointer-events-none absolute -right-24 bottom-0 h-80 w-80 rounded-full bg-volt/10 blur-3xl" />
-      <div className="container relative max-w-[1240px]">
-        <div className="grid overflow-hidden rounded-[24px] border border-black/10 bg-white shadow-[0_24px_80px_rgba(20,20,20,.12)] lg:grid-cols-[1.05fr_.95fr]">
-          <section className="relative overflow-hidden bg-ink p-7 text-white md:p-10 lg:p-14">
+      <div className="container-fluid relative w-full p-2 md:p-4 lg:max-h-full lg:p-4">
+        <div className="auth-shell grid overflow-hidden rounded-[24px] border border-black/10 bg-white shadow-[0_24px_80px_rgba(20,20,20,.12)] lg:grid-cols-[1.05fr_.95fr]">
+          <section className="auth-benefits relative overflow-hidden bg-ink p-7 text-white md:p-9 lg:p-10">
             <div className="pointer-events-none absolute inset-0 opacity-[.08] [background-image:linear-gradient(#fff_1px,transparent_1px),linear-gradient(90deg,#fff_1px,transparent_1px)] [background-size:38px_38px]" />
             <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full border-[42px] border-volt/20" />
             <div className="relative">
@@ -155,25 +157,51 @@ export function AuthForm({
                 </p>
               </div>
               <div
-                className="mt-8 hidden items-end gap-3 lg:flex"
+                className="auth-workspace-preview mt-7 hidden overflow-hidden rounded-2xl border border-white/10 bg-white/[.06] shadow-2xl lg:block"
                 aria-hidden="true"
               >
-                <span className="grid h-28 w-24 place-items-center rounded-2xl bg-white/5 text-volt">
-                  <Zap size={44} />
-                </span>
-                <span className="grid h-20 w-28 place-items-center rounded-2xl bg-volt text-ink">
-                  <Truck size={36} />
-                </span>
-                <span className="grid h-24 w-24 place-items-center rounded-2xl border border-white/10 bg-white/5 text-white">
-                  <LockKeyhole size={36} />
-                </span>
+                <header className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+                  <span className="flex items-center gap-2 text-xs font-bold">
+                    <BarChart3 size={15} className="text-volt" /> Your Electzo
+                    workspace
+                  </span>
+                  <span className="rounded-full bg-green-400/10 px-2 py-1 text-[9px] font-bold text-green-300">
+                    ALL SYSTEMS READY
+                  </span>
+                </header>
+                <div className="grid grid-cols-3 gap-px bg-white/10">
+                  {[
+                    ["Active orders", "03", "Track delivery"],
+                    ["Saved products", "18", "Ready to reorder"],
+                    ["Business savings", "₹4.2k", "This quarter"],
+                  ].map(([label, value, detail]) => (
+                    <div className="bg-[#1d2023] p-4" key={label}>
+                      <small className="text-[9px] uppercase tracking-wider text-white/40">
+                        {label}
+                      </small>
+                      <b className="mt-2 block text-xl text-white">{value}</b>
+                      <span className="mt-1 flex items-center gap-1 text-[9px] text-white/45">
+                        {detail}
+                        <ArrowUpRight size={10} />
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <footer className="flex items-center gap-3 px-4 py-3 text-[10px] text-white/50">
+                  <span className="grid h-7 w-7 place-items-center rounded-lg bg-volt text-ink">
+                    <Truck size={14} />
+                  </span>
+                  <b className="text-white/80">Order VZ-K4M92</b>
+                  <span className="flex-1">Out for delivery</span>
+                  <strong className="text-volt">View tracking →</strong>
+                </footer>
               </div>
             </div>
           </section>
           <section className="flex items-center bg-gradient-to-br from-white to-[#fffdf5] p-5 sm:p-8 lg:p-10">
             <form
               onSubmit={handleSubmit(submit)}
-              className="mx-auto w-full max-w-[470px] rounded-[20px] border border-black/10 bg-white p-6 shadow-[0_12px_40px_rgba(20,20,20,.08)] sm:p-9"
+              className="auth-form-card mx-auto w-full max-w-[470px] rounded-[20px] border border-black/10 bg-white p-6 shadow-[0_12px_40px_rgba(20,20,20,.08)] sm:p-8"
             >
               <span className="grid h-11 w-11 place-items-center rounded-xl bg-volt text-ink">
                 <Zap fill="currentColor" size={23} />

@@ -1,7 +1,14 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { Heart, Scale, ShoppingBag, Star } from "lucide-react";
+import {
+  CheckCircle2,
+  Heart,
+  Scale,
+  ShoppingBag,
+  Star,
+  Truck,
+} from "lucide-react";
 import type { Product } from "@/lib/types";
 import { useStore } from "@/stores/use-store";
 export function ProductCard({
@@ -85,6 +92,16 @@ export function ProductCard({
           <Star size={14} fill="#f6b800" color="#f6b800" />
           <b>{p.rating}</b>
           <span className="muted">({p.reviews})</span>
+        </div>
+        <p className="product-list-description">{p.description}</p>
+        <div className="product-list-assurance">
+          <span className={p.stock > 0 ? "in-stock" : "out-of-stock"}>
+            <CheckCircle2 size={14} />
+            {p.stock > 0 ? `${p.stock} in stock` : "Out of stock"}
+          </span>
+          <span>
+            <Truck size={14} /> Fast dispatch
+          </span>
         </div>
         <div className="product-card-price">
           <b className="text-lg">₹{p.price.toLocaleString("en-IN")}</b>
