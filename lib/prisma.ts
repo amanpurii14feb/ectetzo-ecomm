@@ -15,8 +15,16 @@ function databaseUrl() {
       url.searchParams.set("connect_timeout", "15");
     if (!url.searchParams.has("pool_timeout"))
       url.searchParams.set("pool_timeout", "30");
-    if (!url.searchParams.has("connection_limit"))
-      url.searchParams.set("connection_limit", "1");
+    if (!url.searchParams.has("connection_limit")) {
+      // A single connection makes concurrent page queries and commerce
+      // transactions queue behind each other during local development.
+      // Keep production conservative because each serverless instance owns
+      // its own pool, while allowing development requests to run in parallel.
+      url.searchParams.set(
+        "connection_limit",
+        process.env.NODE_ENV === "production" ? "1" : "5",
+      );
+    }
     if (url.hostname.includes("-pooler."))
       url.searchParams.set("pgbouncer", "true");
     return url.toString();
