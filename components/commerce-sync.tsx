@@ -28,7 +28,11 @@ export function CommerceSync() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ cart: guest.cart, wishlist: guest.wishlist, merge: true }),
       });
-      if (!response.ok || cancelled) return;
+      if (!response.ok) {
+        if (!cancelled) useStore.setState({ accountId: userId, commerceReady: true, hydrated: true });
+        return;
+      }
+      if (cancelled) return;
       const data = await response.json();
       syncing.current = true;
       useStore.setState({ cart: data.cart, wishlist: data.wishlist, accountId: userId, commerceReady: true, hydrated: true });

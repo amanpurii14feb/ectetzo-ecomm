@@ -11,6 +11,7 @@ const orderSchema = z.object({
   city: z.string().trim().min(2).max(80).regex(/^[\p{L} .'-]+$/u, "Enter a valid city."),
   state: z.string().trim().min(2).max(80).regex(/^[\p{L} .'-]+$/u, "Enter a valid state."),
   pin: z.string().regex(/^[1-9]\d{5}$/, "Enter a valid PIN code."),
+  coupon: z.string().trim().toUpperCase().max(20).optional(),
   items: z.array(z.object({ productId: z.number().int().positive().max(2_147_483_647), quantity: z.number().int().min(1).max(20) }).strict()).min(1).max(100),
 }).strict().refine((data) => new Set(data.items.map((item) => item.productId)).size === data.items.length, {
   message: "Duplicate products are not allowed.", path: ["items"],
@@ -44,12 +45,14 @@ export async function POST(request: Request) {
       if(!changed.count)throw new Error(`STOCK:${product.name}`);
     }
     const subtotal = products.reduce((sum, product) => sum + product.price * (requested.get(product.legacyId) ?? 0), 0);
+    if (parsed.data.coupon && parsed.data.coupon !== "WELCOME10") throw new Error("COUPON");
+    const discount = parsed.data.coupon === "WELCOME10" ? Math.min(Math.round(subtotal * 0.1), 500) : 0;
     return tx.order.create({
       data: {
         orderNumber,
         userId,
         subtotal,
-        total: subtotal,
+        total: subtotal - discount,
         contactEmail: parsed.data.email,
         contactPhone: parsed.data.phone,
         shippingName: parsed.data.name,
@@ -72,6 +75,7 @@ export async function POST(request: Request) {
     const message=error instanceof Error?error.message:"";
     if(message==="UNAVAILABLE")return NextResponse.json({error:"One or more products are unavailable."},{status:400});
     if(message.startsWith("STOCK:"))return NextResponse.json({error:`${message.slice(6)} has insufficient stock.`},{status:409});
+    if(message==="COUPON")return NextResponse.json({error:"This coupon is invalid or expired."},{status:400});
     throw error;
   }
 }
