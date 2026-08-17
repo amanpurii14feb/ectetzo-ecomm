@@ -16,14 +16,14 @@ model User {
   passwordHash  String?
   role          UserRole       @default(CUSTOMER)
   phone         String?
-  accounts      Account[]
-  sessions      Session[]
-  addresses     Address[]
-  cartItems     CartItem[]
-  wishlistItems WishlistItem[]
-  orders        Order[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+  accounts      Account[]
+  addresses     Address[]
+  cartItems     CartItem[]
+  orders        Order[]
+  sessions      Session[]
+  wishlistItems WishlistItem[]
 }
 
 model Account {
@@ -59,34 +59,34 @@ model VerificationToken {
 }
 
 model Product {
-  id          String         @id @default(cuid())
-  legacyId    Int            @unique
-  slug        String         @unique
-  name        String
-  brand       String
-  category    String
-  description String
-  price       Int
-  mrp         Int
-  stock       Int            @default(0)
-  lowStockThreshold Int      @default(5)
-  costPrice   Int?
-  barcode     String?
-  weightKg    Float?
-  dimensions  String?
-  tags        String[]       @default([])
-  rating      Float          @default(0)
-  reviews     Int            @default(0)
-  badge       String?
-  color       String?
-  images      String[]       @default([])
-  specs       Json
-  active      Boolean        @default(true)
-  cartItems   CartItem[]
-  wishlists   WishlistItem[]
-  orderItems  OrderItem[]
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  id                String         @id @default(cuid())
+  legacyId          Int            @unique
+  slug              String         @unique
+  name              String
+  brand             String
+  category          String
+  description       String
+  price             Int
+  mrp               Int
+  stock             Int            @default(0)
+  rating            Float          @default(0)
+  reviews           Int            @default(0)
+  badge             String?
+  color             String?
+  specs             Json
+  active            Boolean        @default(true)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  images            String[]       @default([])
+  barcode           String?
+  costPrice         Int?
+  dimensions        String?
+  lowStockThreshold Int            @default(5)
+  tags              String[]       @default([])
+  weightKg          Float?
+  cartItems         CartItem[]
+  orderItems        OrderItem[]
+  wishlists         WishlistItem[]
 
   @@index([category])
   @@index([brand])
@@ -143,9 +143,9 @@ model Address {
   state     String
   pin       String
   isDefault Boolean  @default(false)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
@@ -155,10 +155,10 @@ model CartItem {
   userId    String
   productId String
   quantity  Int
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, productId])
 }
@@ -167,9 +167,9 @@ model WishlistItem {
   id        String   @id @default(cuid())
   userId    String
   productId String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, productId])
 }
@@ -191,10 +191,10 @@ model Order {
   city          String
   state         String
   pin           String
-  user          User          @relation(fields: [userId], references: [id])
-  items         OrderItem[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
+  user          User          @relation(fields: [userId], references: [id])
+  items         OrderItem[]
 
   @@index([userId, createdAt])
 }
