@@ -10,19 +10,50 @@ import { getStoreProducts } from "@/lib/store-products";
 import { prisma } from "@/lib/prisma";
 import { ProductGrid } from "@/components/product-grid";
 import { NewsletterForm } from "@/components/newsletter-form";
+import {
+  brands as fallbackBrands,
+  categories as fallbackCategories,
+  products as fallbackProducts,
+} from "@/data/products";
+
 export const dynamic = "force-dynamic";
+
+async function getHomeData() {
+  try {
+    const [products, categories, brands] = await Promise.all([
+      getStoreProducts(),
+      prisma.category.findMany({
+        where: { active: true },
+        orderBy: { name: "asc" },
+      }),
+      prisma.brand.findMany({
+        where: { active: true },
+        orderBy: { name: "asc" },
+      }),
+    ]);
+
+    return { products, categories, brands };
+  } catch {
+    // Keep the default route available while the production database is
+    // starting up or temporarily unavailable.
+    return {
+      products: fallbackProducts,
+      categories: fallbackCategories.map((name) => ({
+        id: name,
+        name,
+        slug: name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+      })),
+      brands: fallbackBrands.map((name) => ({
+        id: name,
+        name,
+        slug: name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+      })),
+    };
+  }
+}
+
 export default async function Home() {
-  const [products, categories, brands] = await Promise.all([
-    getStoreProducts(),
-    prisma.category.findMany({
-      where: { active: true },
-      orderBy: { name: "asc" },
-    }),
-    prisma.brand.findMany({
-      where: { active: true },
-      orderBy: { name: "asc" },
-    }),
-  ]);
+  const { products, categories, brands } = await getHomeData();
   return (
     <>
       <section className="relative overflow-hidden bg-ink text-white">
