@@ -146,6 +146,8 @@ export function ProductEditor({
               : [l.trim(), ""];
           }),
       );
+      const payload = { ...p };
+      delete payload.id;
       const response = await fetch(
         product?.id
           ? `/api/admin/products/${product.id}`
@@ -154,7 +156,7 @@ export function ProductEditor({
           method: product?.id ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            ...p,
+            ...payload,
             images: p.images ?? [],
             active,
             specs: parsed,
