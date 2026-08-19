@@ -6,7 +6,7 @@ frontend:
         - npm ci --cache .npm --prefer-offline
     build:
       commands:
-        - env | grep -E 'DATABASE_URL|AUTH_SECRET|AUTH_TRUST_HOST|ADMIN_EMAIL|ADMIN_PASSWORD' >> .env.production
+        - env | grep -E 'DATABASE_URL|AUTH_SECRET|AUTH_TRUST_HOST|ADMIN_EMAIL|ADMIN_PASSWORD|S3_REGION|S3_BUCKET_NAME|S3_ACCESS_KEY_ID|S3_SECRET_ACCESS_KEY' >> .env.production
         - NEXT_TELEMETRY_DISABLED=1 npm run build
   artifacts:
     baseDirectory: .next
