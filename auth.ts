@@ -48,6 +48,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
+    authorized({ auth }) {
+      return Boolean(auth?.user?.id);
+    },
     async jwt({ token, user }) {
       if (user?.id) token.id = user.id;
       return token;
