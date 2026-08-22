@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
@@ -20,6 +21,7 @@ import {
   Truck,
 } from "lucide-react";
 const stages = [
+    "PENDING",
     "CONFIRMED",
     "PROCESSING",
     "SHIPPED",
@@ -27,6 +29,13 @@ const stages = [
     "DELIVERED",
   ],
   money = (value: number) => `₹${value.toLocaleString("en-IN")}`;
+const statusContent: Record<string, { title: string; description: string }> = {
+  PENDING: { title: "Your order is awaiting confirmation", description: "We received your order and are confirming the details." },
+  CONFIRMED: { title: "Your order has been confirmed", description: "Your items are confirmed and will move to processing shortly." },
+  PROCESSING: { title: "Your order is being prepared", description: "We're carefully preparing your items for dispatch." },
+  SHIPPED: { title: "Your order is on the way", description: "Your items have left our facility and are moving toward you." },
+  DELIVERED: { title: "Your order has been delivered", description: "Delivered successfully. Thank you for shopping with Electzo." },
+};
 export default async function Page({
   params,
 }: {
@@ -40,7 +49,9 @@ export default async function Page({
     });
   if (!order) notFound();
   const stageIndex = stages.indexOf(order.status),
-    itemCount = order.items.reduce((sum, item) => sum + item.quantity, 0);
+    itemCount = order.items.reduce((sum, item) => sum + item.quantity, 0),
+    progress = stageIndex < 0 ? 0 : (stageIndex / (stages.length - 1)) * 100,
+    currentStatus = statusContent[order.status] ?? statusContent.PENDING;
   return (
     <div className="customer-order-detail-page">
       <div className="customer-order-detail">
@@ -121,27 +132,26 @@ export default async function Page({
                 </span>
                 <div>
                   <small>Current status</small>
-                  <b>
-                    {order.status === "DELIVERED"
-                      ? "Your order has been delivered"
-                      : "Your order is being prepared"}
-                  </b>
-                  <p>
-                    {order.status === "DELIVERED"
-                      ? "Delivered successfully. Thank you for shopping with Electzo."
-                      : "We're preparing your items. You'll be notified when your order ships."}
-                  </p>
+                  <b>{currentStatus.title}</b>
+                  <p>{currentStatus.description}</p>
                 </div>
               </div>
               <small>
                 Last updated {order.updatedAt.toLocaleDateString("en-IN")}
               </small>
             </header>
-            <div>
+            <div
+              className="order-progress-steps"
+              style={{ "--order-progress": progress / 100 } as CSSProperties}
+            >
               {stages.map((stage, index) => (
-                <span className={index <= stageIndex ? "done" : ""} key={stage}>
+                <span
+                  className={index < stageIndex ? "completed" : index === stageIndex ? "current" : "upcoming"}
+                  key={stage}
+                  aria-current={index === stageIndex ? "step" : undefined}
+                >
                   <i>{index < stageIndex ? <CheckCircle2 /> : index + 1}</i>
-                  <b>{stage[0] + stage.slice(1).toLowerCase()}</b>
+                  <b>{stage === "OUT FOR DELIVERY" ? "Out for delivery" : stage[0] + stage.slice(1).toLowerCase()}</b>
                 </span>
               ))}
             </div>
@@ -254,9 +264,9 @@ export default async function Page({
                 {["PENDING", "CONFIRMED"].includes(order.status) && (
                   <CancelOrderButton id={order.id} />
                 )}
-                {!["DELIVERED", "CANCELLED"].includes(order.status) && (
+                {/* {!["DELIVERED", "CANCELLED"].includes(order.status) && (
                   <MarkDeliveredButton id={order.id} />
-                )}
+                )} */}
                 <Link href="/contact" className="btn btn-outline">
                   Contact support
                 </Link>
