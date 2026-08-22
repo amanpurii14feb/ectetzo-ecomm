@@ -1,11 +1,11 @@
 :root {
-  --adm-bg: #f6f6f4;
-  --adm-card: #fff;
-  --adm-text: #202124;
-  --adm-muted: #6d7175;
-  --adm-border: #dfe1e2;
-  --adm-dark: #181a1d;
-  --adm-yellow: #e8b008;
+  --adm-bg: var(--surface-page);
+  --adm-card: var(--surface-card);
+  --adm-text: var(--text-primary);
+  --adm-muted: var(--text-secondary);
+  --adm-border: var(--border-soft);
+  --adm-dark: var(--surface-dark);
+  --adm-yellow: var(--brand-yellow);
 }
 body:has(.adm-app),
 body:has(.adm-login) {
@@ -2398,3 +2398,75 @@ body:has(.adm-login) {
 .adm-notify-pop small,
 .adm-notify-pop > a,
 .adm-notify-pop header button { font-size: 11px; }
+
+/* Admin uses the same Electzo primitives as the customer experience. */
+.adm-sidebar { background:var(--surface-dark); }
+.adm-panel,
+.adm-form-section,
+.adm-order-card,
+.adm-dialog {
+  border-color:var(--border-soft);
+  border-radius:var(--radius-card);
+  background:var(--surface-card);
+  box-shadow:var(--shadow-1);
+}
+.adm-btn {
+  min-height:40px;
+  border-color:var(--border-default);
+  border-radius:var(--radius-control);
+  background:var(--surface-card);
+  color:var(--text-primary);
+  box-shadow:none;
+}
+.adm-btn:hover { border-color:var(--border-strong); background:var(--surface-hover); }
+.adm-btn.primary {
+  border-color:var(--surface-dark);
+  background:var(--surface-dark);
+  color:var(--text-inverse);
+}
+.adm-btn.primary:hover { border-color:#24282c; background:#24282c; }
+.adm-btn.danger {
+  border-color:var(--danger-border);
+  background:var(--surface-card);
+  color:var(--danger);
+}
+.adm-btn.danger:hover { background:var(--danger-bg); }
+.adm-field input,
+.adm-field textarea,
+.adm-field select,
+.adm-filterbar input,
+.adm-filterbar select,
+.adm-select,
+.adm-note {
+  border-color:var(--border-default);
+  border-radius:var(--radius-control);
+  background:var(--surface-card);
+  color:var(--text-primary);
+}
+.adm-field input:focus,
+.adm-field textarea:focus,
+.adm-field select:focus,
+.adm-filterbar input:focus,
+.adm-filterbar select:focus {
+  border-color:var(--border-brand);
+  outline:3px solid rgba(255,196,0,.16);
+  outline-offset:1px;
+}
+.adm-tabs button.active {
+  border-color:var(--border-brand);
+  background:var(--brand-yellow-soft);
+  color:var(--text-primary);
+}
+.adm-data th { background:var(--surface-muted); color:var(--text-secondary); }
+.adm-data tr:hover td { background:var(--surface-hover); }
+.adm-badge.success { border-color:var(--success-border); background:var(--success-bg); color:var(--success); }
+.adm-badge.warning { border-color:var(--warning-border); background:var(--warning-bg); color:var(--warning); }
+.adm-badge.danger { border-color:var(--danger-border); background:var(--danger-bg); color:var(--danger); }
+.adm-badge.info { border-color:var(--info-border); background:var(--info-bg); color:var(--info); }
+.adm-toast {
+  border-color:var(--success-border);
+  border-left:4px solid var(--success);
+  background:var(--surface-card);
+  color:var(--text-primary);
+  box-shadow:var(--shadow-3);
+}

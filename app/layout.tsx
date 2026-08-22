@@ -1,8 +1,16 @@
 import "./globals.css";
 import type { Metadata } from "next";
+import { Manrope } from "next/font/google";
 import { AuthProvider } from "@/components/auth-provider";
 import { SiteChrome } from "@/components/site-chrome";
 import { ApiLoader } from "@/components/api-loader";
+
+const manrope = Manrope({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-manrope",
+});
+
 export const metadata: Metadata = {
   title: "Electzo — Powering Every Connection",
   description:
@@ -11,7 +19,7 @@ export const metadata: Metadata = {
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" data-scroll-behavior="smooth">
-      <body>
+      <body className={manrope.variable}>
         <AuthProvider>
           <ApiLoader />
           <SiteChrome>{children}</SiteChrome>
