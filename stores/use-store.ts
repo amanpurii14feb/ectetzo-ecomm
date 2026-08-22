@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 type State = {
   cart: Record<number, number>;
+  couponCode: string;
   wishlist: number[];
   hydrated: boolean;
   accountId: string | null;
@@ -11,6 +12,7 @@ type State = {
   remove: (id: number) => void;
   quantity: (id: number, q: number) => void;
   clearCart: () => void;
+  setCouponCode: (code: string) => void;
   resetCommerce: () => void;
   toggleWish: (id: number) => void;
   moveToWishlist: (id: number) => void;
@@ -23,6 +25,7 @@ export const useStore = create<State>()(
   persist(
     (set) => ({
       cart: {},
+      couponCode: "",
       wishlist: [],
       hydrated: false,
       accountId: null,
@@ -41,8 +44,11 @@ export const useStore = create<State>()(
         }),
       quantity: (id, q) =>
         set((s) => ({ cart: { ...s.cart, [id]: Math.max(1, q) } })),
-      clearCart: () => set({ cart: {}, notice: "Order placed successfully" }),
-      resetCommerce: () => set({ cart: {}, wishlist: [], notice: "" }),
+      clearCart: () =>
+        set({ cart: {}, couponCode: "", notice: "Order placed successfully" }),
+      setCouponCode: (couponCode) => set({ couponCode }),
+      resetCommerce: () =>
+        set({ cart: {}, couponCode: "", wishlist: [], notice: "" }),
       toggleWish: (id) =>
         set((s) => ({
           wishlist: s.wishlist.includes(id)
@@ -72,7 +78,10 @@ export const useStore = create<State>()(
       name: "electzo-store",
       skipHydration: true,
       // Authenticated account data lives only in PostgreSQL, never localStorage.
-      partialize: (s) => s.accountId ? { cart: {}, wishlist: [] } : { cart: s.cart, wishlist: s.wishlist },
+      partialize: (s) =>
+        s.accountId
+          ? { cart: {}, couponCode: "", wishlist: [] }
+          : { cart: s.cart, couponCode: s.couponCode, wishlist: s.wishlist },
       onRehydrateStorage: () => (state) => state?.setHydrated(true),
     },
   ),

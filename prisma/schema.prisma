@@ -8,22 +8,24 @@ datasource db {
 }
 
 model User {
-  id            String         @id @default(cuid())
-  name          String?
-  email         String         @unique
-  emailVerified DateTime?
-  image         String?
-  passwordHash  String?
-  role          UserRole       @default(CUSTOMER)
-  phone         String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  accounts      Account[]
-  addresses     Address[]
-  cartItems     CartItem[]
-  orders        Order[]
-  sessions      Session[]
-  wishlistItems WishlistItem[]
+  id                String             @id @default(cuid())
+  name              String?
+  email             String             @unique
+  emailVerified     DateTime?
+  image             String?
+  passwordHash      String?
+  role              UserRole           @default(CUSTOMER)
+  phone             String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  accounts          Account[]
+  addresses         Address[]
+  cartItems         CartItem[]
+  orders            Order[]
+  productReviews    ProductReview[]
+  couponRedemptions CouponRedemption[]
+  sessions          Session[]
+  wishlistItems     WishlistItem[]
 }
 
 model Account {
@@ -59,33 +61,34 @@ model VerificationToken {
 }
 
 model Product {
-  id                String         @id @default(cuid())
-  legacyId          Int            @unique
-  slug              String         @unique
+  id                String          @id @default(cuid())
+  legacyId          Int             @unique
+  slug              String          @unique
   name              String
   brand             String
   category          String
   description       String
   price             Int
   mrp               Int
-  stock             Int            @default(0)
-  rating            Float          @default(0)
-  reviews           Int            @default(0)
+  stock             Int             @default(0)
+  rating            Float           @default(0)
+  reviews           Int             @default(0)
   badge             String?
   color             String?
   specs             Json
-  active            Boolean        @default(true)
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
-  images            String[]       @default([])
+  active            Boolean         @default(true)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  images            String[]        @default([])
   barcode           String?
   costPrice         Int?
   dimensions        String?
-  lowStockThreshold Int            @default(5)
-  tags              String[]       @default([])
+  lowStockThreshold Int             @default(5)
+  tags              String[]        @default([])
   weightKg          Float?
   cartItems         CartItem[]
   orderItems        OrderItem[]
+  productReviews    ProductReview[]
   wishlists         WishlistItem[]
 
   @@index([category])
@@ -175,28 +178,67 @@ model WishlistItem {
 }
 
 model Order {
-  id            String        @id @default(cuid())
-  orderNumber   String        @unique
-  userId        String
-  status        OrderStatus   @default(PENDING)
-  paymentMethod PaymentMethod @default(COD)
-  paymentStatus PaymentStatus @default(UNPAID)
-  subtotal      Int
-  shipping      Int           @default(0)
-  total         Int
-  contactEmail  String
-  contactPhone  String
-  shippingName  String
-  addressLine1  String
-  city          String
-  state         String
-  pin           String
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  user          User          @relation(fields: [userId], references: [id])
-  items         OrderItem[]
+  id               String            @id @default(cuid())
+  orderNumber      String            @unique
+  userId           String
+  status           OrderStatus       @default(PENDING)
+  paymentMethod    PaymentMethod     @default(COD)
+  paymentStatus    PaymentStatus     @default(UNPAID)
+  subtotal         Int
+  shipping         Int               @default(0)
+  total            Int
+  discount         Int               @default(0)
+  couponCode       String?
+  couponId         String?
+  contactEmail     String
+  contactPhone     String
+  shippingName     String
+  addressLine1     String
+  city             String
+  state            String
+  pin              String
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  user             User              @relation(fields: [userId], references: [id])
+  items            OrderItem[]
+  coupon           Coupon?           @relation(fields: [couponId], references: [id])
+  couponRedemption CouponRedemption?
 
   @@index([userId, createdAt])
+}
+
+model Coupon {
+  id          String             @id @default(cuid())
+  code        String             @unique
+  type        CouponType
+  value       Int
+  maxDiscount Int?
+  minSubtotal Int                @default(0)
+  usageLimit  Int?
+  active      Boolean            @default(true)
+  startsAt    DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  orders      Order[]
+  redemptions CouponRedemption[]
+
+  @@index([active, startsAt, expiresAt])
+}
+
+model CouponRedemption {
+  id         String   @id @default(cuid())
+  couponId   String
+  userId     String
+  orderId    String   @unique
+  discount   Int
+  redeemedAt DateTime @default(now())
+  coupon     Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([couponId, userId])
+  @@index([userId, redeemedAt])
 }
 
 model OrderItem {
@@ -208,6 +250,23 @@ model OrderItem {
   quantity  Int
   order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product   Product @relation(fields: [productId], references: [id])
+}
+
+model ProductReview {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  rating    Int
+  title     String?
+  comment   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([productId, createdAt])
+  @@index([userId])
 }
 
 enum UserRole {
@@ -232,4 +291,9 @@ enum PaymentStatus {
   UNPAID
   PAID
   FAILED
+}
+
+enum CouponType {
+  PERCENTAGE
+  FIXED
 }

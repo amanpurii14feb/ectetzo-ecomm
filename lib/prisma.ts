@@ -9,6 +9,16 @@ function databaseUrl() {
   if (!value) return undefined;
   try {
     const url = new URL(value);
+    // Neon recommends its pooled endpoint for long-running app traffic and
+    // serverless concurrency. Keep DATABASE_URL unchanged for Prisma CLI
+    // migrations, but route the runtime client through the pooler.
+    if (
+      url.hostname.endsWith(".neon.tech") &&
+      !url.hostname.includes("-pooler.")
+    ) {
+      const [project, ...rest] = url.hostname.split(".");
+      url.hostname = `${project}-pooler.${rest.join(".")}`;
+    }
     if (!url.searchParams.has("sslmode"))
       url.searchParams.set("sslmode", "require");
     if (!url.searchParams.has("connect_timeout"))

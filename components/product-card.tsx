@@ -1,11 +1,15 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
   CheckCircle2,
   Heart,
+  Minus,
+  Plus,
   Scale,
-  ShoppingBag,
+  Share2,
+  ShoppingCart,
   Star,
   Truck,
 } from "lucide-react";
@@ -20,7 +24,11 @@ export function ProductCard({
   comparing?: boolean;
   onCompare?: (id: number) => void;
 }) {
+  const router = useRouter();
   const add = useStore((s) => s.add),
+    remove = useStore((s) => s.remove),
+    setQuantity = useStore((s) => s.quantity),
+    notify = useStore((s) => s.notify),
     toggle = useStore((s) => s.toggleWish),
     wish = useStore((s) => s.wishlist.includes(p.id)),
     cartQuantity = useStore((s) => s.cart[p.id] || 0),
@@ -38,10 +46,11 @@ export function ProductCard({
                 width={600}
                 height={600}
                 sizes="(max-width: 560px) 100vw, (max-width: 900px) 50vw, 33vw"
+                unoptimized
               />
             )}
             {p.badge && (
-              <span className="absolute left-3 top-3 z-10 rounded bg-ink px-2 py-1 text-[10px] font-bold text-white">
+              <span className="product-badge absolute left-3 top-3 z-10">
                 {p.badge}
               </span>
             )}
@@ -59,17 +68,23 @@ export function ProductCard({
           </button>
           <button
             type="button"
-            className={inCart ? "active" : ""}
-            aria-label={
-              inCart
-                ? `Add one more ${p.name}. ${cartQuantity} currently in cart`
-                : `Add ${p.name} to cart`
-            }
-            title={inCart ? "Add one more" : "Quick add to cart"}
-            onClick={() => add(p.id)}
+            aria-label={`Share ${p.name}`}
+            title="Share product"
+            onClick={async () => {
+              const url = `${window.location.origin}/product/${p.slug}`;
+              if (navigator.share) {
+                try {
+                  await navigator.share({ title: p.name, text: p.description, url });
+                } catch (error) {
+                  if (error instanceof DOMException && error.name === "AbortError") return;
+                }
+              } else {
+                await navigator.clipboard.writeText(url);
+                notify("Product link copied");
+              }
+            }}
           >
-            <ShoppingBag size={18} />
-            {inCart && <span>{cartQuantity}</span>}
+            <Share2 size={18} />
           </button>
         </div>
       </div>
@@ -106,8 +121,36 @@ export function ProductCard({
         <div className="product-card-price">
           <b className="text-lg">₹{p.price.toLocaleString("en-IN")}</b>
           <s className="text-xs muted">₹{p.mrp.toLocaleString("en-IN")}</s>
-          <span className="text-xs font-bold text-green-700">{off}% off</span>
+          <span className="product-discount">{off}% off</span>
         </div>
+        {inCart ? (
+          <div className="product-cart-stepper" aria-label={`${cartQuantity} in cart`}>
+            <button
+              type="button"
+              onClick={() => cartQuantity === 1 ? remove(p.id) : setQuantity(p.id, cartQuantity - 1)}
+              aria-label={`Remove one ${p.name}`}
+            >
+              <Minus size={17} />
+            </button>
+            <button type="button" onClick={() => router.push("/cart")} aria-label="Go to cart">
+              <ShoppingCart size={19} />
+              <span>{cartQuantity}</span>
+            </button>
+            <button type="button" onClick={() => add(p.id)} aria-label={`Add one more ${p.name}`}>
+              <Plus size={17} />
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="product-cart-button"
+            onClick={() => add(p.id)}
+            aria-label={`Add ${p.name} to cart`}
+          >
+            <ShoppingCart size={20} />
+            <span>Add to cart</span>
+          </button>
+        )}
       </div>
     </article>
   );

@@ -51,15 +51,19 @@ export function CheckoutForm() {
     cart = useStore((s) => s.cart),
     hydrated = useStore((s) => s.hydrated),
     commerceReady = useStore((s) => s.commerceReady),
-    clearCart = useStore((s) => s.clearCart);
+    clearCart = useStore((s) => s.clearCart),
+    storedCoupon = useStore((s) => s.couponCode),
+    setCouponCode = useStore((s) => s.setCouponCode);
   const [addresses, setAddresses] = useState<Address[]>([]),
     [selected, setSelected] = useState(""),
     [saveAddress, setSaveAddress] = useState(false),
     [terms, setTerms] = useState(false),
     [summaryOpen, setSummaryOpen] = useState(false),
     [couponOpen, setCouponOpen] = useState(false),
-    [couponInput, setCouponInput] = useState(""),
-    [coupon, setCoupon] = useState(""),
+    [couponInput, setCouponInput] = useState(storedCoupon),
+    [coupon, setCoupon] = useState(storedCoupon),
+    [discount, setDiscount] = useState(0),
+    [couponBusy, setCouponBusy] = useState(false),
     [couponError, setCouponError] = useState(""),
     [serverError, setServerError] = useState("");
   const {
@@ -109,9 +113,36 @@ export function CheckoutForm() {
       [products, cart],
     ),
     subtotal = items.reduce((s, p) => s + p.price * cart[p.id], 0),
-    discount =
-      coupon === "WELCOME10" ? Math.min(Math.round(subtotal * 0.1), 500) : 0,
     total = subtotal - discount;
+  useEffect(() => {
+    if (!storedCoupon || !subtotal) return;
+    let active = true;
+    fetch("/api/coupons/validate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code: storedCoupon, subtotal }),
+    })
+      .then(async (response) => ({
+        ok: response.ok,
+        body: await response.json().catch(() => ({})),
+      }))
+      .then(({ ok, body }) => {
+        if (!active) return;
+        if (ok) {
+          setCoupon(body.code);
+          setCouponInput(body.code);
+          setDiscount(body.discount);
+        } else {
+          setCoupon("");
+          setDiscount(0);
+          setCouponCode("");
+          setCouponError(body.error || "Coupon is no longer available.");
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [storedCoupon, subtotal, setCouponCode]);
   function choose(a: Address) {
     setSelected(a.id);
     (
@@ -125,15 +156,28 @@ export function CheckoutForm() {
       ] as [keyof Form, string][]
     ).forEach(([k, v]) => setValue(k, v, { shouldValidate: true }));
   }
-  function applyCoupon() {
+  async function applyCoupon() {
     const c = couponInput.trim().toUpperCase();
-    if (c !== "WELCOME10") {
-      setCoupon("");
-      setCouponError("This coupon is invalid or expired.");
-      return;
-    }
-    setCoupon(c);
+    if (!c) return setCouponError("Enter a coupon code.");
+    setCouponBusy(true);
     setCouponError("");
+    const response = await fetch("/api/coupons/validate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code: c, subtotal }),
+    });
+    const result = await response.json().catch(() => ({}));
+    setCouponBusy(false);
+    if (!response.ok) {
+      setCoupon("");
+      setDiscount(0);
+      setCouponCode("");
+      return setCouponError(result.error || "Coupon could not be applied.");
+    }
+    setCoupon(result.code);
+    setCouponInput(result.code);
+    setDiscount(result.discount);
+    setCouponCode(result.code);
   }
   async function submit(v: Form) {
     if (!terms || !items.length) return;
@@ -446,6 +490,7 @@ export function CheckoutForm() {
                         fill
                         sizes="64px"
                         className="object-contain"
+                        unoptimized
                       />
                     )}
                     <span className="absolute right-0 top-0 grid h-5 min-w-5 place-items-center rounded-full bg-ink px-1 text-[10px] text-white">
@@ -489,18 +534,23 @@ export function CheckoutForm() {
                     <button
                       type="button"
                       onClick={applyCoupon}
+                      disabled={couponBusy}
                       className="btn btn-dark rounded-l-none"
                     >
-                      Apply
+                      {couponBusy ? "Checking…" : "Apply"}
                     </button>
                   </div>
                   {coupon && (
                     <p className="mt-2 text-sm font-bold text-green-700">
-                      WELCOME10 applied — saved {money(discount)}{" "}
+                      {coupon} applied — saved {money(discount)}{" "}
                       <button
                         type="button"
                         className="underline"
-                        onClick={() => setCoupon("")}
+                        onClick={() => {
+                          setCoupon("");
+                          setDiscount(0);
+                          setCouponCode("");
+                        }}
                       >
                         Remove
                       </button>
@@ -644,7 +694,11 @@ function Row({ label, value }: { label: string; value: string }) {
 
 function CheckoutSkeleton() {
   return (
-    <div className="checkout-form bg-paper py-8 md:py-12" role="status" aria-label="Loading checkout">
+    <div
+      className="checkout-form bg-paper py-8 md:py-12"
+      role="status"
+      aria-label="Loading checkout"
+    >
       <div className="container max-w-[1280px] animate-pulse">
         <div className="mx-auto mb-8 h-8 w-80 max-w-full rounded-full bg-gray-200" />
         <div className="grid items-start gap-7 lg:grid-cols-[minmax(0,1fr)_400px]">

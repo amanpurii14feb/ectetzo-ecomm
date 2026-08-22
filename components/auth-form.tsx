@@ -20,6 +20,7 @@ import {
   LockKeyhole,
   Mail,
   PackageSearch,
+  Phone,
   ShieldCheck,
   Truck,
   UserRound,
@@ -30,6 +31,9 @@ const schema = z.object({
   email: z.string().trim().email().max(254),
   password: z.string().min(6, "Use at least 6 characters").max(100),
   name: z.string().trim().min(2).max(80).optional(),
+  phone: z.string().regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit mobile number").optional(),
+  confirmPassword: z.string().max(100).optional(),
+  acceptTerms: z.boolean().optional(),
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -44,6 +48,7 @@ export function AuthForm({
   const [serverError, setServerError] = useState("");
   const [transitioning, setTransitioning] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const {
     register,
     handleSubmit,
@@ -55,6 +60,18 @@ export function AuthForm({
     if (registering) {
       if (!values.name || values.name.trim().length < 2) {
         setServerError("Please enter your full name.");
+        return;
+      }
+      if (!values.phone || !/^[6-9]\d{9}$/.test(values.phone)) {
+        setServerError("Please enter a valid 10-digit mobile number.");
+        return;
+      }
+      if (values.password !== values.confirmPassword) {
+        setServerError("Passwords do not match.");
+        return;
+      }
+      if (!values.acceptTerms) {
+        setServerError("Please accept the Terms and Privacy Policy.");
         return;
       }
       if (
@@ -71,7 +88,12 @@ export function AuthForm({
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
+        body: JSON.stringify({
+          name: values.name,
+          email: values.email,
+          phone: values.phone,
+          password: values.password,
+        }),
       });
       const body = await response.json();
       if (!response.ok) {
@@ -249,6 +271,23 @@ export function AuthForm({
                   {...register("email")}
                 />
               </AuthField>
+              {registering && (
+                <AuthField
+                  label="Mobile number"
+                  error={errors.phone?.message}
+                  icon={<Phone size={18} />}
+                >
+                  <input
+                    type="tel"
+                    autoComplete="tel"
+                    inputMode="numeric"
+                    maxLength={10}
+                    placeholder="10-digit mobile number"
+                    aria-invalid={!!errors.phone}
+                    {...register("phone")}
+                  />
+                </AuthField>
+              )}
               <AuthField
                 label="Password"
                 error={errors.password?.message}
@@ -278,6 +317,53 @@ export function AuthForm({
                   {...register("password")}
                 />
               </AuthField>
+              {registering && (
+                <AuthField
+                  label="Confirm password"
+                  error={errors.confirmPassword?.message}
+                  icon={<LockKeyhole size={18} />}
+                  action={
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      aria-label={showConfirmPassword ? "Hide confirmed password" : "Show confirmed password"}
+                      className="text-gray-500 hover:text-ink"
+                    >
+                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  }
+                >
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    autoComplete="new-password"
+                    minLength={8}
+                    maxLength={100}
+                    placeholder="Re-enter your password"
+                    aria-invalid={!!errors.confirmPassword}
+                    {...register("confirmPassword")}
+                  />
+                </AuthField>
+              )}
+              {registering && (
+                <label className="mt-4 flex items-start gap-2 text-xs font-semibold leading-5 text-gray-600">
+                  <input
+                    type="checkbox"
+                    className="mt-1 accent-yellow-500"
+                    {...register("acceptTerms")}
+                  />
+                  <span>
+                    I agree to the{" "}
+                    <Link href="/terms" className="font-bold text-amber-700 hover:underline">
+                      Terms & Conditions
+                    </Link>{" "}
+                    and{" "}
+                    <Link href="/privacy-policy" className="font-bold text-amber-700 hover:underline">
+                      Privacy Policy
+                    </Link>
+                    .
+                  </span>
+                </label>
+              )}
               {!registering && (
                 <label className="mt-3 flex items-center gap-2 text-xs font-semibold text-gray-600">
                   <input type="checkbox" className="accent-yellow-500" />{" "}

@@ -17,16 +17,19 @@ import {
   ZoomIn,
 } from "lucide-react";
 import { ProductGrid } from "./product-grid";
+import { ProductReviews } from "./product-reviews";
 import { useRouter } from "next/navigation";
 export function ProductDetail({
   p,
   related = [],
+  openReviews = false,
 }: {
   p: Product;
   related?: Product[];
+  openReviews?: boolean;
 }) {
   const [q, setQ] = useState(1),
-    [tab, setTab] = useState("Description"),
+    [tab, setTab] = useState(openReviews ? "Reviews" : "Description"),
     [pin, setPin] = useState(""),
     [selectedImage, setSelectedImage] = useState(p.images?.[0]),
     [zooming, setZooming] = useState(false),
@@ -228,7 +231,7 @@ export function ProductDetail({
           </div>
         </div>
       </div>
-      <div className="mt-16 border-b flex gap-6 overflow-auto">
+      <div id="reviews" className="mt-16 border-b flex gap-6 overflow-auto">
         {[
           "Description",
           "Specifications",
@@ -257,10 +260,10 @@ export function ProductDetail({
               </div>
             ))
           : tab === "Reviews"
-            ? `Rated ${p.rating} out of 5 by ${p.reviews} verified customers.`
+            ? <ProductReviews productId={p.id} />
             : `${p.description} Built to meet demanding applications with consistent performance, dependable materials and straightforward installation.`}
       </div>
-      <h2 className="section-title mb-8 mt-10">Similar products</h2>
+      <div className="similar-products-heading"><h2 className="section-title">Similar products</h2><p>Products you might also be interested in.</p></div>
       <ProductGrid items={related} />
       {lightbox && selectedImage && (
         <div

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   BarChart3,
   CheckCircle2,
@@ -30,9 +31,12 @@ export default function AdminLogin() {
     event.preventDefault();
     setBusy(true);
     setError("");
+    // Admins may arrive here with an existing customer/non-admin JWT. Clear it
+    // first so the new credentials always create a fresh administrator session.
+    await signOut({ redirect: false });
     const result = await signIn("credentials", {
-      email,
-      password,
+      email: email.trim().toLowerCase(),
+      password: password.trim(),
       redirect: false,
     });
     if (result?.error) {
@@ -143,7 +147,11 @@ export default function AdminLogin() {
           <label className="admin-gate-field">
             <span>
               <b>Password</b>
-              <button type="button">Forgot password?</button>
+              <Link
+                href={`/admin/forgot-password${email ? `?email=${encodeURIComponent(email)}` : ""}`}
+              >
+                Forgot password?
+              </Link>
             </span>
             <div>
               <input

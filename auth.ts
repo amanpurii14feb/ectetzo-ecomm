@@ -7,8 +7,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 
 const credentialsSchema = z.object({
-  email: z.string().email().transform((value) => value.toLowerCase()),
-  password: z.string().min(6).max(100),
+  email: z.string().trim().email().transform((value) => value.toLowerCase()),
+  password: z.string().trim().min(6).max(100),
 });
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -23,11 +23,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
       async authorize(rawCredentials) {
         const parsed = credentialsSchema.safeParse(rawCredentials);
-        if (!parsed.success) return null;
-        const user = await prisma.user.findUnique({ where: { email: parsed.data.email } });
-        if (!user?.passwordHash) return null;
+        if (!parsed.success) {
+          if (process.env.NODE_ENV === "development") console.warn("[auth] Credentials rejected: invalid input shape");
+          return null;
+        }
+        const user = await prisma.user.findFirst({
+          where: { email: { equals: parsed.data.email, mode: "insensitive" } },
+        });
+        if (!user?.passwordHash) {
+          if (process.env.NODE_ENV === "development") console.warn("[auth] Credentials rejected: account or password hash missing");
+          return null;
+        }
         const valid = await compare(parsed.data.password, user.passwordHash);
-        if (!valid) return null;
+        if (!valid) {
+          if (process.env.NODE_ENV === "development") console.warn("[auth] Credentials rejected: password mismatch");
+          return null;
+        }
         return { id: user.id, email: user.email, name: user.name, image: user.image };
       },
     }),

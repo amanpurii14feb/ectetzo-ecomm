@@ -21,18 +21,19 @@ import {
 import { useState } from "react";
 
 const FREE_SHIPPING_AT = 999;
-const COUPON = "ELECTZO10";
-
 export default function Cart() {
   const { products, loading: productsLoading } = useProducts();
   const [coupon, setCoupon] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState("");
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [couponBusy, setCouponBusy] = useState(false);
   const [couponError, setCouponError] = useState("");
   const cart = useStore((s) => s.cart);
   const hydrated = useStore((s) => s.hydrated);
   const remove = useStore((s) => s.remove);
   const setQuantity = useStore((s) => s.quantity);
   const moveToWishlist = useStore((s) => s.moveToWishlist);
+  const setCouponCode = useStore((s) => s.setCouponCode);
 
   const items = products.filter((product) => cart[product.id]);
   const subtotal = items.reduce(
@@ -43,8 +44,7 @@ export default function Cart() {
     (sum, product) => sum + product.mrp * cart[product.id],
     0,
   );
-  const discount =
-    appliedCoupon === COUPON ? Math.min(Math.round(subtotal * 0.1), 500) : 0;
+  const discount = couponDiscount;
   const shipping = subtotal >= FREE_SHIPPING_AT ? 0 : 99;
   const gst = Math.round(subtotal * 0.18);
   const total = subtotal + shipping - discount;
@@ -57,17 +57,33 @@ export default function Cart() {
   const shippingRemaining = Math.max(0, FREE_SHIPPING_AT - subtotal);
   const shippingProgress = Math.min(100, (subtotal / FREE_SHIPPING_AT) * 100);
 
-  const applyCoupon = () => {
+  const applyCoupon = async () => {
     const normalized = coupon.trim().toUpperCase();
-    if (normalized === COUPON) {
-      setAppliedCoupon(COUPON);
-      setCoupon(COUPON);
-      setCouponError("");
-      useStore.getState().notify("Coupon applied — you saved up to ₹500");
-    } else {
+    if (!normalized) return setCouponError("Enter a coupon code.");
+    setCouponBusy(true);
+    setCouponError("");
+    const response = await fetch("/api/coupons/validate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code: normalized, subtotal }),
+    });
+    const result = await response.json().catch(() => ({}));
+    setCouponBusy(false);
+    if (!response.ok) {
       setAppliedCoupon("");
-      setCouponError(`Invalid code. Try ${COUPON}`);
+      setCouponDiscount(0);
+      setCouponCode("");
+      return setCouponError(result.error || "Coupon could not be applied.");
     }
+    setAppliedCoupon(result.code);
+    setCoupon(result.code);
+    setCouponDiscount(result.discount);
+    setCouponCode(result.code);
+    useStore
+      .getState()
+      .notify(
+        `Coupon applied — you saved ₹${result.discount.toLocaleString("en-IN")}`,
+      );
   };
 
   const updateQuantity = (id: number, next: number, stock: number) =>
@@ -258,6 +274,8 @@ export default function Cart() {
                         onClick={() => {
                           setAppliedCoupon("");
                           setCoupon("");
+                          setCouponDiscount(0);
+                          setCouponCode("");
                         }}
                       >
                         Remove
@@ -274,12 +292,17 @@ export default function Cart() {
                         onKeyDown={(e) => e.key === "Enter" && applyCoupon()}
                         placeholder="Enter coupon code"
                       />
-                      <button onClick={applyCoupon}>Apply</button>
+                      <button onClick={applyCoupon} disabled={couponBusy}>
+                        {couponBusy ? "Checking…" : "Apply"}
+                      </button>
                     </div>
                   )}
                   {couponError && <small>{couponError}</small>}
                   {!appliedCoupon && !couponError && (
-                    <small>Use {COUPON} for 10% off, up to ₹500</small>
+                    <small>
+                      Enter an active coupon code. Each coupon can be used once
+                      per account.
+                    </small>
                   )}
                 </div>
                 <div className="summary-lines">

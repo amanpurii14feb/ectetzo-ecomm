@@ -28,10 +28,13 @@ const toProduct = (row: Awaited<ReturnType<typeof prisma.product.findUnique>>): 
 
 export default async function Page({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ review?: string }>;
 }) {
   const { slug } = await params;
+  const query = await searchParams;
   const row = await prisma.product.findUnique({ where: { slug } });
   const p = toProduct(row);
   if (!p) notFound();
@@ -43,6 +46,7 @@ export default async function Page({
   return (
     <ProductDetail
       p={p}
+      openReviews={query.review === "1"}
       related={relatedRows.map(toProduct).filter((item): item is Product => item !== null)}
     />
   );

@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 const registerSchema = z.object({
   name: z.string().trim().min(2).max(80).regex(/^[\p{L} .'-]+$/u, "Enter a valid full name."),
   email: z.string().trim().toLowerCase().email().max(254),
+  phone: z.string().regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit mobile number."),
   password: z.string().min(8, "Password must be at least 8 characters.").max(100)
     .regex(/[a-z]/, "Password must include a lowercase letter.")
     .regex(/[A-Z]/, "Password must include an uppercase letter.")
@@ -23,8 +24,13 @@ export async function POST(request: Request) {
   }
   const passwordHash = await hash(parsed.data.password, 12);
   const user = await prisma.user.create({
-    data: { name: parsed.data.name, email: parsed.data.email, passwordHash },
-    select: { id: true, name: true, email: true },
+    data: {
+      name: parsed.data.name,
+      email: parsed.data.email,
+      phone: parsed.data.phone,
+      passwordHash,
+    },
+    select: { id: true, name: true, email: true, phone: true },
   });
   return NextResponse.json({ user }, { status: 201 });
 }
