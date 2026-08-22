@@ -21,9 +21,9 @@ model User {
   accounts          Account[]
   addresses         Address[]
   cartItems         CartItem[]
+  couponRedemptions CouponRedemption[]
   orders            Order[]
   productReviews    ProductReview[]
-  couponRedemptions CouponRedemption[]
   sessions          Session[]
   wishlistItems     WishlistItem[]
 }
@@ -187,9 +187,6 @@ model Order {
   subtotal         Int
   shipping         Int               @default(0)
   total            Int
-  discount         Int               @default(0)
-  couponCode       String?
-  couponId         String?
   contactEmail     String
   contactPhone     String
   shippingName     String
@@ -199,10 +196,13 @@ model Order {
   pin              String
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
+  couponCode       String?
+  couponId         String?
+  discount         Int               @default(0)
+  couponRedemption CouponRedemption?
+  coupon           Coupon?           @relation(fields: [couponId], references: [id])
   user             User              @relation(fields: [userId], references: [id])
   items            OrderItem[]
-  coupon           Coupon?           @relation(fields: [couponId], references: [id])
-  couponRedemption CouponRedemption?
 
   @@index([userId, createdAt])
 }
@@ -220,8 +220,8 @@ model Coupon {
   expiresAt   DateTime?
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
-  orders      Order[]
   redemptions CouponRedemption[]
+  orders      Order[]
 
   @@index([active, startsAt, expiresAt])
 }
@@ -234,8 +234,8 @@ model CouponRedemption {
   discount   Int
   redeemedAt DateTime @default(now())
   coupon     Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([couponId, userId])
   @@index([userId, redeemedAt])
@@ -261,8 +261,8 @@ model ProductReview {
   comment   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, productId])
   @@index([productId, createdAt])

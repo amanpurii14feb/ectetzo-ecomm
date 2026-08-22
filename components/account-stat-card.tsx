@@ -29,9 +29,11 @@ const cards = {
 export function AccountStatCard({
   type,
   value,
+  detail,
 }: {
   type: keyof typeof cards;
   value?: number;
+  detail?: string;
 }) {
   const config = cards[type];
   const Icon = config.icon;
@@ -56,7 +58,7 @@ export function AccountStatCard({
         <b>{config.label}</b>
       </span>
       <span className="account-stat-action">
-        {config.helper} <ArrowUpRight size={15} />
+        {detail ?? config.helper} <ArrowUpRight size={15} />
       </span>
     </Link>
   );

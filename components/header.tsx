@@ -3,11 +3,13 @@ import Link from "next/link";
 import {
   ChevronDown,
   Heart,
+  LayoutDashboard,
   LogOut,
   MapPin,
   Menu,
   Package,
   Search,
+  ShieldCheck,
   ShoppingCart,
   User,
   X,
@@ -188,17 +190,23 @@ export function Header() {
                       {user.email && <small>{user.email}</small>}
                     </div>
                   </div>
-                  <Link href="/account/orders">
+                  <Link href="/account" className={pathname === "/account" ? "active" : undefined}>
+                    <LayoutDashboard size={17} /> Overview
+                  </Link>
+                  <Link href="/account/orders" className={pathname.startsWith("/account/orders") ? "active" : undefined}>
                     <Package size={17} /> My orders
                   </Link>
-                  <Link href="/account/addresses">
+                  <Link href="/account/profile" className={pathname === "/account/profile" ? "active" : undefined}>
+                    <User size={17} /> Profile
+                  </Link>
+                  <Link href="/account/addresses" className={pathname === "/account/addresses" ? "active" : undefined}>
                     <MapPin size={17} /> Saved addresses
                   </Link>
-                  <Link href="/wishlist">
+                  <Link href="/wishlist" className={pathname === "/wishlist" ? "active" : undefined}>
                     <Heart size={17} /> My wishlist
                   </Link>
-                  <Link className="account-manage" href="/account">
-                    Manage account →
+                  <Link href="/account/security" className={pathname === "/account/security" ? "active" : undefined}>
+                    <ShieldCheck size={17} /> Security
                   </Link>
                   <button
                     className="account-signout"
@@ -280,13 +288,27 @@ export function Header() {
             ))}
             {user ? (
               <>
-                <Link
-                  onClick={() => setOpen(false)}
-                  className="mt-2 flex items-center gap-2 border-t border-white/10 py-3 font-bold"
-                  href="/account"
-                >
-                  <User size={18} /> My account
-                </Link>
+                {[
+                  ["Overview", "/account", LayoutDashboard],
+                  ["My orders", "/account/orders", Package],
+                  ["Profile", "/account/profile", User],
+                  ["Saved addresses", "/account/addresses", MapPin],
+                  ["My wishlist", "/wishlist", Heart],
+                  ["Security", "/account/security", ShieldCheck],
+                ].map(([label, href, Icon], index) => {
+                  const MenuIcon = Icon as typeof User;
+                  return (
+                    <Link
+                      key={String(label)}
+                      onClick={() => setOpen(false)}
+                      className={`${index === 0 ? "mt-2 border-t" : ""} flex items-center gap-2 border-white/10 py-3 font-bold`}
+                      href={String(href)}
+                    >
+                      <MenuIcon size={18} />
+                      {String(label)}
+                    </Link>
+                  );
+                })}
                 <button
                   onClick={logout}
                   className="flex items-center gap-2 py-3 font-bold"

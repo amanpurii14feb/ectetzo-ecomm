@@ -3,20 +3,29 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
-import { AccountShell } from "@/components/account-shell";
 import { CancelOrderButton } from "@/components/cancel-order-button";
 import { MarkDeliveredButton } from "@/components/mark-delivered-button";
+import { OrderProductActions } from "@/components/order-product-actions";
 import {
   ArrowLeft,
   CalendarDays,
   CheckCircle2,
+  ChevronRight,
   CreditCard,
-  FileText,
+  Headphones,
   MapPin,
+  Phone,
+  ShieldCheck,
   ShoppingBag,
   Truck,
 } from "lucide-react";
-const stages = ["CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED"],
+const stages = [
+    "CONFIRMED",
+    "PROCESSING",
+    "SHIPPED",
+    "OUT FOR DELIVERY",
+    "DELIVERED",
+  ],
   money = (value: number) => `₹${value.toLocaleString("en-IN")}`;
 export default async function Page({
   params,
@@ -33,11 +42,18 @@ export default async function Page({
   const stageIndex = stages.indexOf(order.status),
     itemCount = order.items.reduce((sum, item) => sum + item.quantity, 0);
   return (
-    <AccountShell>
+    <div className="customer-order-detail-page">
       <div className="customer-order-detail">
+        <nav className="order-breadcrumb" aria-label="Breadcrumb">
+          <Link href="/account">My Account</Link>
+          <ChevronRight />
+          <Link href="/account/orders">Orders</Link>
+          <ChevronRight />
+          <span>#{order.orderNumber}</span>
+        </nav>
         <Link className="customer-order-back" href="/account/orders">
           <ArrowLeft />
-          Back to orders
+          Back to My Orders
         </Link>
         <header className="customer-order-detail-hero">
           <div>
@@ -50,6 +66,11 @@ export default async function Page({
                 timeStyle: "short",
               })}
             </p>
+            <small>
+              {order.items.length}{" "}
+              {order.items.length === 1 ? "product" : "products"} · {itemCount}{" "}
+              units
+            </small>
           </div>
           <span
             className={`customer-status large ${order.status.toLowerCase()}`}
@@ -57,6 +78,40 @@ export default async function Page({
             {order.status}
           </span>
         </header>
+        <section className="order-info-strip">
+          <div>
+            <ShoppingBag />
+            <span>
+              <small>Order ID</small>
+              <b>#{order.orderNumber}</b>
+            </span>
+          </div>
+          <div>
+            <ShoppingBag />
+            <span>
+              <small>Items</small>
+              <b>{itemCount} units</b>
+            </span>
+          </div>
+          <div>
+            <CreditCard />
+            <span>
+              <small>Payment</small>
+              <b>
+                {order.paymentMethod === "COD"
+                  ? "Cash on Delivery"
+                  : order.paymentMethod}
+              </b>
+            </span>
+          </div>
+          <div>
+            <ShieldCheck />
+            <span>
+              <small>Protection</small>
+              <b>Secure order</b>
+            </span>
+          </div>
+        </section>
         {order.status !== "CANCELLED" && (
           <section className="customer-delivery-track">
             <header>
@@ -71,6 +126,11 @@ export default async function Page({
                       ? "Your order has been delivered"
                       : "Your order is being prepared"}
                   </b>
+                  <p>
+                    {order.status === "DELIVERED"
+                      ? "Delivered successfully. Thank you for shopping with Electzo."
+                      : "We're preparing your items. You'll be notified when your order ships."}
+                  </p>
                 </div>
               </div>
               <small>
@@ -123,17 +183,17 @@ export default async function Page({
                       {item.name}
                     </Link>
                     <small>
-                      SKU VZ-{String(item.product.legacyId).padStart(5, "0")} ·
-                      Qty {item.quantity}
+                      SKU VZ-{String(item.product.legacyId).padStart(5, "0")}
                     </small>
-                    {order.status === "DELIVERED" && (
-                      <Link
-                        className="customer-rate-link"
-                        href={`/product/${item.product.slug}?review=1#reviews`}
-                      >
-                        Rate &amp; review
-                      </Link>
-                    )}
+                    <small>
+                      {item.product.brand} · Qty {item.quantity} ·{" "}
+                      {item.product.category}
+                    </small>
+                    <OrderProductActions
+                      id={item.product.legacyId}
+                      slug={item.product.slug}
+                      review={order.status === "DELIVERED"}
+                    />
                   </div>
                   <span>
                     <small>{money(item.price)} each</small>
@@ -163,6 +223,43 @@ export default async function Page({
                   <span>Total paid</span>
                   <b>{money(order.total)}</b>
                 </p>
+              </div>
+              <div className="order-trust-strip">
+                <span>
+                  <ShieldCheck />
+                  Secure order
+                </span>
+                <span>
+                  <Headphones />
+                  Easy support
+                </span>
+                <span>
+                  <CheckCircle2 />
+                  Authentic products
+                </span>
+              </div>
+            </section>
+            <section className="customer-inline-actions">
+              <div>
+                <b>Need to manage this order?</b>
+                <p>
+                  Update the delivery state, cancel an eligible order, or
+                  contact support.
+                </p>
+                <a href={`tel:${order.contactPhone}`}>
+                  <Phone /> {order.contactPhone}
+                </a>
+              </div>
+              <div>
+                {["PENDING", "CONFIRMED"].includes(order.status) && (
+                  <CancelOrderButton id={order.id} />
+                )}
+                {!["DELIVERED", "CANCELLED"].includes(order.status) && (
+                  <MarkDeliveredButton id={order.id} />
+                )}
+                <Link href="/contact" className="btn btn-outline">
+                  Contact support
+                </Link>
               </div>
             </section>
           </main>
@@ -199,7 +296,11 @@ export default async function Page({
               <dl>
                 <div>
                   <dt>Method</dt>
-                  <dd>{order.paymentMethod}</dd>
+                  <dd>
+                    {order.paymentMethod === "COD"
+                      ? "Cash on Delivery"
+                      : order.paymentMethod}
+                  </dd>
                 </div>
                 <div>
                   <dt>Status</dt>
@@ -217,29 +318,25 @@ export default async function Page({
                 </div>
               </dl>
             </section>
-            <section className="customer-detail-card customer-order-help">
-              <header>
-                <div>
-                  <FileText />
-                  <span>
-                    <h2>Order actions</h2>
-                    <p>Manage this purchase</p>
-                  </span>
-                </div>
-              </header>
+            <section className="customer-detail-card order-support-card">
               <div>
-                {["PENDING", "CONFIRMED"].includes(order.status) && (
-                  <CancelOrderButton id={order.id} />
-                )}{" "}
-                {!["DELIVERED", "CANCELLED"].includes(order.status) && (
-                  <MarkDeliveredButton id={order.id} />
-                )}
-                <Link href="/contact">Need help with this order?</Link>
+                <span>
+                  <Headphones />
+                </span>
+                <h2>Need help with this order?</h2>
+                <p>
+                  Our support team can help with delivery, payment or
+                  product-related questions.
+                </p>
+                <Link href="/contact" className="btn btn-outline">
+                  Contact support
+                </Link>
+                <small>We usually respond within a few minutes.</small>
               </div>
             </section>
           </aside>
         </div>
       </div>
-    </AccountShell>
+    </div>
   );
 }
